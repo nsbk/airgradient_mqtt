@@ -14,12 +14,12 @@ I'm not using the OLED display to show the values, but you can find the relevant
 
 Update the `arduino_config.h` file with your details. I use one config file per device.
 
-`SECRET_SSID`: WiFi ssid
-`SECRET_PASS`: WiFi password
-`MQTT_SERVER_ADDRESS`: The MQTT server address, you can use `test.mosquitto.org` if you're not running your own MQTT server yet. I use a dockerized Mosquitto MQTT server https://mosquitto.org/
-`IP_LAST_CHUNK`: 
-`MQTT_TOPIC`: The MQTT topic that the values will be published to. I define one topic per device.
-`DEVICE_ID`: A friendly name for your device
+- `SECRET_SSID`: WiFi ssid
+- `SECRET_PASS`: WiFi password
+- `MQTT_SERVER_ADDRESS`: The MQTT server address, you can use `test.mosquitto.org` if you're not running your own MQTT server yet. I use a dockerized Mosquitto MQTT server https://mosquitto.org/
+- `IP_LAST_CHUNK`: 
+- `MQTT_TOPIC`: The MQTT topic that the values will be published to. I define one topic per device.
+- `DEVICE_ID`: A friendly name for your device
 
 ## Home Assistant
 
