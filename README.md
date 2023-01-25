@@ -23,8 +23,32 @@ Update the `arduino_config.h` file with your details. I use one config file per 
 
 ## Home Assistant
 
-I use Home Assistant to track and display the sensor status. Define the sensors in your `configuration.yaml` file as described in [this repo](https://github.com/smrtnt/Open-Home-Automation/tree/master/ha_mqtt_sensor_dht22)
+I use Home Assistant to track and display the sensor status. Define the sensors in your `configuration.yaml` as follows:
 
+```yaml
+# Air Gradient sensors
+mqtt:
+  sensor:
+    - name: 'Temperature office'
+      state_topic: 'esp/dht/office'
+      unit_of_measurement: '..C'
+      value_template: '{{ value_json.atmp | round(1) }}'
+
+    - name: 'Humidity office'
+      state_topic: 'esp/dht/office'
+      unit_of_measurement: '%'
+      value_template: '{{ value_json.rhum }}'
+
+    - name: 'CO2 office'
+      state_topic: 'esp/dht/office'
+      unit_of_measurement: 'ppm'
+      value_template: '{{ value_json.rco2 }}'
+
+    - name: 'PM2 office'
+      state_topic: 'esp/dht/office'
+      unit_of_measurement: 'ppm'
+      value_template: '{{ value_json.pm02 }}'
+```
 
 ## License
 
