@@ -140,8 +140,8 @@ char* GenerateMetrics() {
   if (HAS_SHT) {
     TMP_RH stat = ag.periodicFetchData();
 
-    doc["atmp"] = stat.t;
-    doc["rhum"] = stat.rh;
+    doc["atmp"] = stat.t - TEMP_DEVIATION;
+    doc["rhum"] = stat.rh - HUMIDITY_DEVIATION;
   }
 
   serializeJson(doc, output, sizeof(output));

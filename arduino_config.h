@@ -4,3 +4,6 @@
 #define IP_LAST_CHUNK 100
 #define MQTT_TOPIC "esp/dht/some_topic"
 #define DEVICE_ID "your_device_id"
+#define TEMP_DEVIATION +2.5
+#define HUMIDITY_DEVIATION +2
+
