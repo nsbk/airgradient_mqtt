@@ -182,6 +182,16 @@ void setup() {
   ag.CO2_Init();
   ag.PMS_Init();
   ag.TMP_RH_Init(0x44);
+
+  // get file storage going
+  //Start LittleFS
+  if(LittleFS.begin()){
+    Serial.println("Mounted LittleFS");
+    readConfig("/config.json");  
+  } else {
+    Serial.println("An Error has occurred while mounting LittleFS");
+  }
+
 }
 
 void loop() {
@@ -513,7 +523,7 @@ void sendToMQTTServer() {
  void connectToWifi() {
    WiFiManager wifiManager;
    //WiFi.disconnect(); //to delete previous saved hotspot
-   String HOTSPOT = "AG-" + String(ESP.getChipId(), HEX);
+   String HOTSPOT = "AirGradient-" + String(ESP.getChipId(), HEX);
    updateOLED2("90s to connect", "to Wifi Hotspot", HOTSPOT);
    wifiManager.setTimeout(90);
 
