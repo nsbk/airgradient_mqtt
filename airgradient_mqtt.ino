@@ -1,40 +1,3 @@
-/*
-
-Important: AirGradient intended this code is only for the DIY PRO PCB Version 3.7 that has a push button mounted.
-I'm running this code on the 4.2 version that also has the push button.
-
-
-This is the code for the AirGradient DIY PRO Air Quality Sensor with an ESP8266 Microcontroller.
-It is a high quality sensor showing PM2.5, CO2, Temperature and Humidity on a small display and can send data over Wifi to an MQTT broker.
-
-For build instructions please visit https://www.airgradient.com/diy/
-
-Based on the original code at https://github.com/airgradienthq/arduino/blob/master/examples/DIY_PRO_V4_2/DIY_PRO_V4_2.ino published under MIT License.
-
-
-This sketch requires installing the following libraries:
-  WifiManager by tzapu, tablatronix
-    https://github.com/tzapu/WiFiManager
-  PubSubClient by Nick O'Leary
-    https://pubsubclient.knolleary.net/
-    https://github.com/knolleary/pubsubclient
-  ArduinoJson by Benoît Blanchon
-    https://arduinojson.org/
-    https://github.com/bblanchon/ArduinoJson
-  ESP8266 and ESP32 OLED driver for SSD1306 displays by ThingPulse, Fabrice Weinberg
-    https://github.com/ThingPulse/esp8266-oled-ssd1306
-
-  “U8g2” by oliver tested with version 2.32.15
-  "Sensirion I2C SGP41" by Sensation Version 0.1.0
-  "Sensirion Gas Index Algorithm" by Sensation Version 3.2.1
-  "Arduino-SHT" by Johannes Winkelmann Version 1.2.2
-
-
-The original AirGradient implementation writes to an API located at http://hw.airgradient.com/
-This implementation writes to an MQTT server of your choice.
-
-*/
-
 #include <LittleFS.h>
 #include <AirGradient.h>
 #include <ArduinoJson.h>
@@ -154,6 +117,9 @@ int lastState = LOW;
 int currentState;
 unsigned long pressedTime  = 0;
 unsigned long releasedTime = 0;
+
+void readConfig(String cFilename);
+void saveConfig(String cFilename);
 
 void inConf(){
   setConfig();
@@ -488,38 +454,52 @@ void mqtt_publish(char *sub_topic, const char *payload)
   mqtt_client.publish(mqtt_topic,payload);
 }
 
-void readConfig(char *cFilename) {
-  if (LittleFS.exists(cFilename)) {
+
+
+void readConfig(String cFilename)
+{
+  if (LittleFS.exists(cFilename)) 
+  {
     Serial.println("Reading config file");
     File configFile = LittleFS.open(cFilename,"r");
-    if (configFile) {
+    if (configFile) 
+    {
       String configData;
-      while (configFile.available()){
+      while (configFile.available())
+      {
         configData += char(configFile.read());
       }
       DynamicJsonDocument json(1024);
       auto deserializeError = deserializeJson(json, configData);
       serializeJson(json, Serial);
-      if (! deserializeError) {
+      if (!deserializeError) 
+      {
         Serial.println("\nParsed json");
         strcpy(mqtt_srvr, json["mqtt_srvr"]); 
         strcpy(mqtt_user, json["mqtt_user"]);
         strcpy(mqtt_pass, json["mqtt_pass"]);
         strcpy(mqtt_locn, json["mqtt_locn"]);
         strcpy(mqtt_room, json["mqtt_room"]);
-      } else {
+      }
+      else 
+      {
         Serial.println("\nFailed to parse json");
       }
       configFile.close();
-    } else {
+    } else 
+    {
       Serial.println("Failed to open config file");
     }
-  } else {
+  } else 
+  {
     Serial.println("No config file to read");
   }
 }
 
-void saveConfig(char *cFilename) {
+
+
+void saveConfig(String cFilename) 
+{
   Serial.println("Saving config");
   
   DynamicJsonDocument json(1024);
