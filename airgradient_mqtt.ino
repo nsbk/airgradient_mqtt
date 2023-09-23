@@ -40,7 +40,7 @@ This implementation writes to an MQTT server of your choice.
 #include <ArduinoJson.h>
 #include <WiFiManager.h>
 #include <ESP8266WiFi.h>
-//#include <ArduinoOTA.h>
+#include <ArduinoOTA.h>
 #include <PubSubClient.h>
 //#include <Wire.h>
 
@@ -85,19 +85,6 @@ const bool HAS_PM = true;
 const bool HAS_CO2 = true;
 const bool HAS_SHT = true;
 
-
-// Temperature MQTT Topics
-const char* MQTT_PUB_METRICS = MQTT_TOPIC;
-
-// The frequency of measurement updates.
-const int UPDATE_FREQUENCY_SECONDS = 30;
-// For housekeeping.
-long lastUpdate;
-int counter = 0;
-
-
-
-
 // set to true to switch from Celcius to Fahrenheit
 boolean inF = true;
 
@@ -138,8 +125,8 @@ unsigned long currentMillis = 0;
 const int oledInterval = 5000;
 unsigned long previousOled = 0;
 
-const int sendToServerInterval = 10000;
-unsigned long previoussendToServer = 0;
+//const int sendToServerInterval = 10000;
+//unsigned long previoussendToServer = 0;
 
 const int tvocInterval = 1000;
 unsigned long previousTVOC = 0;
@@ -168,142 +155,6 @@ int currentState;
 unsigned long pressedTime  = 0;
 unsigned long releasedTime = 0;
 
-void setup() 
-{
-  // Serial console
-  Serial.begin(115200);
-  Serial.println("Hello");
-
-  // Start sensors
-  u8g2.begin();
-  sht.init();
-  sht.setAccuracy(SHTSensor::SHT_ACCURACY_MEDIUM);
-  //u8g2.setDisplayRotation(U8G2_R0);
-
-  EEPROM.begin(512);
-  delay(500);
-
-  buttonConfig = String(EEPROM.read(addr)).toInt();
-  if (buttonConfig>3) buttonConfig=0;
-  delay(400);
-  setConfig();
-  Serial.println("buttonConfig: "+String(buttonConfig));
-   updateOLED2("Press Button", "Now for", "Config Menu");
-    delay(2000);
-  pinMode(D7, INPUT_PULLUP);
-  currentState = digitalRead(D7);
-  if (currentState == LOW)
-  {
-    updateOLED2("Entering", "Config Menu", "");
-    delay(3000);
-    lastState = HIGH;
-    setConfig();
-    inConf();
-  }
-
-  updateOLED2("Warming Up", "Serial Number:", String(ESP.getChipId(), HEX));
-  sgp41.begin(Wire);
-  if (HAS_CO2) ag.CO2_Init();
-  if (HAS_PM) ag.PMS_Init();
-  if (HAS_SHT) ag.TMP_RH_Init(0x44);
-
-  //Start LittleFS
-  if(LittleFS.begin()){
-    Serial.println("Mounted LittleFS");
-    readConfig("/config.json");  
-  } else {
-    Serial.println("An Error has occurred while mounting LittleFS");
-  }
-
-  if (connectWIFI)
-  {
-     connectToWifi();
-  }
-
-  // Port defaults to 8266
-  // ArduinoOTA.setPort(8266);
-
-  // Hostname defaults to esp8266-[ChipID]
-  // ArduinoOTA.setHostname("myesp8266");
-
-  // No authentication by default
-  // ArduinoOTA.setPassword("admin");
-
-  // Password can be set with it's md5 value as well
-  // MD5(admin) = 21232f297a57a5a743894a0e4a801fc3
-  // ArduinoOTA.setPasswordHash("21232f297a57a5a743894a0e4a801fc3");
-
-  ArduinoOTA.onStart([]() {
-    String type;
-    if (ArduinoOTA.getCommand() == U_FLASH) {
-      type = "sketch";
-    } else { // U_FS
-      type = "filesystem";
-    }
-
-    // NOTE: if updating FS this would be the place to unmount FS using FS.end()
-    Serial.println("Start updating " + type);
-  });
-  ArduinoOTA.onEnd([]() {
-    Serial.println("\nEnd");
-  });
-  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
-  });
-  ArduinoOTA.onError([](ota_error_t error) {
-    Serial.printf("Error[%u]: ", error);
-    if (error == OTA_AUTH_ERROR) {
-      Serial.println("Auth Failed");
-    } else if (error == OTA_BEGIN_ERROR) {
-      Serial.println("Begin Failed");
-    } else if (error == OTA_CONNECT_ERROR) {
-      Serial.println("Connect Failed");
-    } else if (error == OTA_RECEIVE_ERROR) {
-      Serial.println("Receive Failed");
-    } else if (error == OTA_END_ERROR) {
-      Serial.println("End Failed");
-    }
-  });
-  ArduinoOTA.begin();
-  Serial.println("Ready");
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
-
-  showTextRectangle(mqtt_locn,mqtt_room,true);
-  delay(DISPLAY_DELAY);
-}
-
-void loop() {
-  ArduinoOTA.handle();
-
-  if (connectWIFI){
-    mqtt_connect();
-
-  currentMillis = millis();
-  updateTVOC();
-  updateOLED();
-  updateCo2();
-  updatePm();
-  updateTempHum();
-
-  mqtt_publish("nox",NOX);
-  mqtt_publish("tvoc",TVOC);
-  mqtt_publish("pm01",pm01);
-  mqtt_publish("pm25",pm25);
-  mqtt_publish("pm25AQI", PM_TO_AQI_US(pm25));
-  mqtt_publish("pm10",pm10);
-  mqtt_publish("pm03",pm03PCount);
-  mqtt_publish("rh",rhstr); 
-  mqtt_publish("Co2",co2);
-  mqtt_publish("temperature",temp); 
-  mqtt_publish("humidity",hum); 
-
-
-  
-  //sendToServer();
-  mqtt_client.loop();
-}
-
 void inConf(){
   setConfig();
   currentState = digitalRead(D7);
@@ -330,14 +181,7 @@ void inConf(){
   if (lastState == LOW && currentState == LOW){
      long passedDuration = millis() - pressedTime;
       if( passedDuration > 4000 ) {
-        // to do
-//        if (buttonConfig==4) {
-//          updateOLED2("Saved", "Release", "Button Now");
-//          delay(1000);
-//          updateOLED2("Starting", "CO2", "Calibration");
-//          delay(1000);
-//          Co2Calibration();
-//       } else {
+
           updateOLED2("Saved", "Release", "Button Now");
           delay(1000);
           updateOLED2("Rebooting", "in", "5 seconds");
@@ -346,7 +190,7 @@ void inConf(){
           EEPROM.commit();
           delay(1000);
           ESP.restart();
- //       }
+
     }
 
   }
@@ -356,7 +200,8 @@ void inConf(){
 }
 
 
-void setConfig() {
+void setConfig() 
+{
   if (buttonConfig == 0) {
     updateOLED2("Temp. in C", "PM in ug/m3", "Long Press Saves");
       u8g2.setDisplayRotation(U8G2_R0);
@@ -465,7 +310,8 @@ void updateTempHum()
     }
 }
 
-void updateOLED() {
+void updateOLED() 
+{
    if (currentMillis - previousOled >= oledInterval) {
      previousOled += oledInterval;
 
@@ -489,7 +335,8 @@ void updateOLED() {
    }
 }
 
-void updateOLED2(String ln1, String ln2, String ln3) {
+void updateOLED2(String ln1, String ln2, String ln3) 
+{
   char buf[9];
   u8g2.firstPage();
   u8g2.firstPage();
@@ -501,40 +348,41 @@ void updateOLED2(String ln1, String ln2, String ln3) {
     } while ( u8g2.nextPage() );
 }
 
-void sendToServer() {
-   if (currentMillis - previoussendToServer >= sendToServerInterval) {
-     previoussendToServer += sendToServerInterval;
-      String payload = "{\"wifi\":" + String(WiFi.RSSI())
-      + (Co2 < 0 ? "" : ", \"rco2\":" + String(Co2))
-      + (pm01 < 0 ? "" : ", \"pm01\":" + String(pm01))
-      + (pm25 < 0 ? "" : ", \"pm02\":" + String(pm25))
-      + (pm10 < 0 ? "" : ", \"pm10\":" + String(pm10))
-      + (pm03PCount < 0 ? "" : ", \"pm003_count\":" + String(pm03PCount))
-      + (TVOC < 0 ? "" : ", \"tvoc_index\":" + String(TVOC))
-      + (NOX < 0 ? "" : ", \"nox_index\":" + String(NOX))
-      + ", \"atmp\":" + String(temp)
-      + (hum < 0 ? "" : ", \"rhum\":" + String(hum))
-      + "}";
+// void sendToServer() 
+// {
+//    if (currentMillis - previoussendToServer >= sendToServerInterval) {
+//      previoussendToServer += sendToServerInterval;
+//       String payload = "{\"wifi\":" + String(WiFi.RSSI())
+//       + (Co2 < 0 ? "" : ", \"rco2\":" + String(Co2))
+//       + (pm01 < 0 ? "" : ", \"pm01\":" + String(pm01))
+//       + (pm25 < 0 ? "" : ", \"pm02\":" + String(pm25))
+//       + (pm10 < 0 ? "" : ", \"pm10\":" + String(pm10))
+//       + (pm03PCount < 0 ? "" : ", \"pm003_count\":" + String(pm03PCount))
+//       + (TVOC < 0 ? "" : ", \"tvoc_index\":" + String(TVOC))
+//       + (NOX < 0 ? "" : ", \"nox_index\":" + String(NOX))
+//       + ", \"atmp\":" + String(temp)
+//       + (hum < 0 ? "" : ", \"rhum\":" + String(hum))
+//       + "}";
 
-      if(WiFi.status()== WL_CONNECTED){
-        Serial.println(payload);
-        String POSTURL = APIROOT + "sensors/airgradient:" + String(ESP.getChipId(), HEX) + "/measures";
-        Serial.println(POSTURL);
-        WiFiClient client;
-        HTTPClient http;
-        http.begin(client, POSTURL);
-        http.addHeader("content-type", "application/json");
-        int httpCode = http.POST(payload);
-        String response = http.getString();
-        Serial.println(httpCode);
-        Serial.println(response);
-        http.end();
-      }
-      else {
-        Serial.println("WiFi Disconnected");
-      }
-   }
-}
+//       if(WiFi.status()== WL_CONNECTED){
+//         Serial.println(payload);
+//         String POSTURL = APIROOT + "sensors/airgradient:" + String(ESP.getChipId(), HEX) + "/measures";
+//         Serial.println(POSTURL);
+//         WiFiClient client;
+//         HTTPClient http;
+//         http.begin(client, POSTURL);
+//         http.addHeader("content-type", "application/json");
+//         int httpCode = http.POST(payload);
+//         String response = http.getString();
+//         Serial.println(httpCode);
+//         Serial.println(response);
+//         http.end();
+//       }
+//       else {
+//         Serial.println("WiFi Disconnected");
+//       }
+//    }
+// }
 
 // Wifi Manager
 void connectToWifi() 
@@ -582,7 +430,8 @@ void connectToWifi()
 }
 
 // Calculate PM2.5 US AQI
-int PM_TO_AQI_US(int pm02) {
+int PM_TO_AQI_US(int pm02) 
+{
   if (pm02 <= 12.0) return ((50 - 0) / (12.0 - .0) * (pm02 - .0) + 0);
   else if (pm02 <= 35.4) return ((100 - 50) / (35.4 - 12.0) * (pm02 - 12.0) + 50);
   else if (pm02 <= 55.4) return ((150 - 100) / (55.4 - 35.4) * (pm02 - 35.4) + 100);
@@ -595,7 +444,8 @@ int PM_TO_AQI_US(int pm02) {
 
 // Function to connect and reconnect as necessary to the MQTT server.
 // Should be called in the loop function and it will take care if connecting.
-void mqtt_connect() {
+void mqtt_connect() 
+{
   int8_t ret;
 
   // Stop if already connected.
@@ -613,7 +463,7 @@ void mqtt_connect() {
 
   uint8_t retries = 3;
   while ((ret = mqtt_client.connect((char *)CID.c_str(),mqtt_user,mqtt_pass)) == 0) { // connect will return 0 for not connected   
-    showTextRectangle("MQTT", "Failed "+String(mqtt_client.state()),true);
+    //showTextRectangle("MQTT", "Failed "+String(mqtt_client.state()),true);
     Serial.println(mqtt_client.state());
     Serial.println(F("Retrying MQTT connection in 5 seconds..."));
     delay(5000);  // wait 5 seconds
@@ -626,7 +476,8 @@ void mqtt_connect() {
   Serial.println(F("MQTT Connected!"));
 }
 
-void mqtt_publish(char *sub_topic, const char *payload) {
+void mqtt_publish(char *sub_topic, const char *payload) 
+{
   char mqtt_topic[80];
   strcpy(mqtt_topic,mqtt_locn);
   strcat(mqtt_topic,"/");
@@ -685,4 +536,163 @@ void saveConfig(char *cFilename) {
   } else {
     Serial.println("Failed to open config file for writing");
   }
+}
+
+void setup() 
+{
+  // Serial console
+  Serial.begin(115200);
+  Serial.println("Hello");
+
+  // Start sensors
+  u8g2.begin();
+  sht.init();
+  sht.setAccuracy(SHTSensor::SHT_ACCURACY_MEDIUM);
+  //u8g2.setDisplayRotation(U8G2_R0);
+
+  EEPROM.begin(512);
+  delay(500);
+
+  buttonConfig = String(EEPROM.read(addr)).toInt();
+  if (buttonConfig>3) buttonConfig=0;
+  delay(400);
+  setConfig();
+  Serial.println("buttonConfig: "+String(buttonConfig));
+   updateOLED2("Press Button", "Now for", "Config Menu");
+    delay(2000);
+  pinMode(D7, INPUT_PULLUP);
+  currentState = digitalRead(D7);
+  if (currentState == LOW)
+  {
+    updateOLED2("Entering", "Config Menu", "");
+    delay(3000);
+    lastState = HIGH;
+    setConfig();
+    inConf();
+  }
+
+  updateOLED2("Warming Up", "Serial Number:", String(ESP.getChipId(), HEX));
+  sgp41.begin(Wire);
+  if (HAS_CO2) ag.CO2_Init();
+  if (HAS_PM) ag.PMS_Init();
+  if (HAS_SHT) ag.TMP_RH_Init(0x44);
+
+  //Start LittleFS
+  if(LittleFS.begin()){
+    Serial.println("Mounted LittleFS");
+    readConfig("/config.json");  
+  } else {
+    Serial.println("An Error has occurred while mounting LittleFS");
+  }
+
+  if (connectWIFI)
+  {
+     connectToWifi();
+  }
+
+  // Port defaults to 8266
+  // ArduinoOTA.setPort(8266);
+
+  // Hostname defaults to esp8266-[ChipID]
+  // ArduinoOTA.setHostname("myesp8266");
+
+  // No authentication by default
+  // ArduinoOTA.setPassword("admin");
+
+  // Password can be set with it's md5 value as well
+  // MD5(admin) = 21232f297a57a5a743894a0e4a801fc3
+  // ArduinoOTA.setPasswordHash("21232f297a57a5a743894a0e4a801fc3");
+
+  ArduinoOTA.onStart([]() {
+    String type;
+    if (ArduinoOTA.getCommand() == U_FLASH) {
+      type = "sketch";
+    } else { // U_FS
+      type = "filesystem";
+    }
+
+    // NOTE: if updating FS this would be the place to unmount FS using FS.end()
+    Serial.println("Start updating " + type);
+  });
+  ArduinoOTA.onEnd([]() {
+    Serial.println("\nEnd");
+  });
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+  });
+  ArduinoOTA.onError([](ota_error_t error) {
+    Serial.printf("Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) {
+      Serial.println("Auth Failed");
+    } else if (error == OTA_BEGIN_ERROR) {
+      Serial.println("Begin Failed");
+    } else if (error == OTA_CONNECT_ERROR) {
+      Serial.println("Connect Failed");
+    } else if (error == OTA_RECEIVE_ERROR) {
+      Serial.println("Receive Failed");
+    } else if (error == OTA_END_ERROR) {
+      Serial.println("End Failed");
+    }
+  });
+  ArduinoOTA.begin();
+  Serial.println("Ready");
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
+
+  //showTextRectangle(mqtt_locn,mqtt_room,true);
+  //delay(DISPLAY_DELAY);
+}
+
+void loop() 
+{
+ ArduinoOTA.handle();
+
+  if (connectWIFI){
+    mqtt_connect();
+  }
+
+  currentMillis = millis();
+  updateTVOC();
+  updateOLED();
+  updateCo2();
+  updatePm();
+  updateTempHum();
+
+
+  char noxstr[4];
+  itoa(NOX, noxstr, 4);
+  char tvocstr[4];
+  itoa(TVOC, tvocstr, 4);
+  char pm01str[4];
+  itoa(pm01, pm01str, 4);
+  char pm25str[4];
+  itoa(pm25, pm25str, 4);
+  char pm10str[4];
+  itoa(pm10, pm10str, 4);
+  char pm03str[4];
+  itoa(pm03PCount, pm03str, 4);
+  char co2str[4];
+  itoa(Co2, co2str, 4);
+  char tempstr[4];
+  itoa(temp, tempstr, 4);
+  char humstr[4];
+  itoa(hum, humstr, 4);
+
+
+  mqtt_publish("nox_index", noxstr);
+  mqtt_publish("tvoc_index", tvocstr);
+  mqtt_publish("pm01", pm01str);
+  mqtt_publish("pm25", pm25str);
+  //mqtt_publish("pm25AQI", String(PM_TO_AQI_US(pm25)));
+  mqtt_publish("pm10", pm10str);
+  mqtt_publish("pm03", pm03str);
+  //mqtt_publish("rh",rhstr); 
+  mqtt_publish("co2", co2str);
+  mqtt_publish("temperature", tempstr); 
+  mqtt_publish("humidity", humstr); 
+
+
+  
+  //sendToServer();
+  mqtt_client.loop(); 
 }
