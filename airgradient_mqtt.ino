@@ -155,22 +155,27 @@ void setup() {
   delay(500);
 
   buttonConfig = String(EEPROM.read(addr)).toInt();
-  if (buttonConfig>3) buttonConfig=0;
+  if (buttonConfig > 3) buttonConfig = 0;
+
   delay(400);
   setConfig();
   Serial.println("buttonConfig: " + String(buttonConfig));
   
   updateOLED2(
-    OLEDStrings::STARTUP_CONFIG_PROMPT_LINE1, 
-    OLEDStrings::STARTUP_CONFIG_PROMPT_LINE2, 
-    OLEDStrings::STARTUP_CONFIG_PROMPT_LINE3);
+    OLEDStrings::StartupConfigPromptLine1, 
+    OLEDStrings::StartupConfigPromptLine2, 
+    OLEDStrings::StartupConfigPromptLine3);
   
   delay(2000);
   pinMode(D7, INPUT_PULLUP);
   currentState = digitalRead(D7);
   if (currentState == LOW)
   {
-    updateOLED2("Entering", "Config Menu", "");
+    updateOLED2(
+      OLEDStrings::EnteringConfigLine1,
+      OLEDStrings::EnteringConfigLine2,
+      OLEDStrings::EnteringConfigLine3
+    );
     delay(3000);
     lastState = HIGH;
     setConfig();
@@ -182,7 +187,11 @@ void setup() {
      connectToWifi();
   }
 
-  updateOLED2("Warming Up", "Serial Number:", String(ESP.getChipId(), HEX));
+  updateOLED2(
+    OLEDStrings::StartupMessageLine1, 
+    OLEDStrings::StartupMessageLine2, 
+    String(ESP.getChipId(), HEX));
+
   sgp41.begin(Wire);
   ag.CO2_Init();
   ag.PMS_Init();
@@ -222,9 +231,9 @@ void inConf(){
   currentState = digitalRead(D7);
 
   if (currentState){
-    Serial.println("currentState: high");
+    Serial.println(DebugMessages::ConfigButtonPinHigh);
   } else {
-    Serial.println("currentState: low");
+    Serial.println(DebugMessages::ConfigButtonPinLow);
   }
 
   if(lastState == HIGH && currentState == LOW) {
@@ -251,10 +260,18 @@ void inConf(){
 //          delay(1000);
 //          Co2Calibration();
 //       } else {
-          updateOLED2("Saved", "Release", "Button Now");
+          updateOLED2(
+            OLEDStrings::ConfigSavedLine1,
+            OLEDStrings::ConfigSavedLine2,
+            OLEDStrings::ConfigSavedLine3);
           delay(1000);
-          updateOLED2("Rebooting", "in", "5 seconds");
+
+          updateOLED2(
+            OLEDStrings::RebootingLine1,
+            OLEDStrings::RebootingLine2,
+            OLEDStrings::RebootingLine3);
           delay(5000);
+
           EEPROM.write(addr, char(buttonConfig));
           EEPROM.commit();
           delay(1000);
@@ -270,25 +287,45 @@ void inConf(){
 
 
 void setConfig() {
-  if (buttonConfig == 0) {
-    updateOLED2("Temp. in C", "PM in ug/m3", "Long Press Saves");
+  if (buttonConfig == 0) 
+  {
+    updateOLED2(
+      OLEDStrings::ConfigTempC,
+      OLEDStrings::ConfigPMugm3,
+      OLEDStrings::ConfigSaveMessage);
+
       u8g2.setDisplayRotation(U8G2_R0);
       inF = false;
       inUSAQI = false;
   }
-    if (buttonConfig == 1) {
-    updateOLED2("Temp. in C", "PM in US AQI", "Long Press Saves");
+    if (buttonConfig == 1) 
+    {
+    updateOLED2(
+      OLEDStrings::ConfigTempC,
+      OLEDStrings::ConfigPMAQI,
+      OLEDStrings::ConfigSaveMessage);
+
       u8g2.setDisplayRotation(U8G2_R0);
       inF = false;
       inUSAQI = true;
-  } else if (buttonConfig == 2) {
-    updateOLED2("Temp. in F", "PM in ug/m3", "Long Press Saves");
+  } else if (buttonConfig == 2) 
+  {
+    updateOLED2(
+      OLEDStrings::ConfigTempF,
+      OLEDStrings::ConfigPMugm3,
+      OLEDStrings::ConfigSaveMessage);
+
+    
     u8g2.setDisplayRotation(U8G2_R0);
       inF = true;
       inUSAQI = false;
   } else  if (buttonConfig == 3) {
-    updateOLED2("Temp. in F", "PM in US AQI", "Long Press Saves");
-      u8g2.setDisplayRotation(U8G2_R0);
+    updateOLED2(
+      OLEDStrings::ConfigTempF,
+      OLEDStrings::ConfigPMAQI,
+      OLEDStrings::ConfigSaveMessage);
+    
+    u8g2.setDisplayRotation(U8G2_R0);
        inF = true;
       inUSAQI = true;
   }
@@ -303,7 +340,7 @@ void setConfig() {
 
 void updateTVOC()
 {
- uint16_t error;
+    uint16_t error;
     char errorMessage[256];
     uint16_t defaultRh = 0x8000;
     uint16_t defaultT = 0x6666;
@@ -319,15 +356,18 @@ void updateTVOC()
     compensationT = static_cast<uint16_t>((temp + 45) * 65535 / 175);
     compensationRh = static_cast<uint16_t>(hum * 65535 / 100);
 
-    if (conditioning_s > 0) {
+    if (conditioning_s > 0) 
+    {
         error = sgp41.executeConditioning(compensationRh, compensationT, srawVoc);
         conditioning_s--;
-    } else {
-        error = sgp41.measureRawSignals(compensationRh, compensationT, srawVoc,
-                                        srawNox);
+    } 
+    else 
+    {
+        error = sgp41.measureRawSignals(compensationRh, compensationT, srawVoc, srawNox);
     }
 
-    if (currentMillis - previousTVOC >= tvocInterval) {
+    if (currentMillis - previousTVOC >= tvocInterval) 
+    {
       previousTVOC += tvocInterval;
       TVOC = voc_algorithm.process(srawVoc);
       NOX = nox_algorithm.process(srawNox);
@@ -337,7 +377,8 @@ void updateTVOC()
 
 void updateCo2()
 {
-    if (currentMillis - previousCo2 >= co2Interval) {
+    if (currentMillis - previousCo2 >= co2Interval) 
+    {
       previousCo2 += co2Interval;
       Co2 = ag.getCO2_Raw();
       Serial.println(String(Co2));
@@ -346,7 +387,8 @@ void updateCo2()
 
 void updatePm()
 {
-    if (currentMillis - previousPm >= pmInterval) {
+    if (currentMillis - previousPm >= pmInterval) 
+    {
       previousPm += pmInterval;
       pm01 = ag.getPM1_Raw();
       pm25 = ag.getPM2_Raw();
@@ -358,63 +400,83 @@ void updatePm()
 
 void updateTempHum()
 {
-    if (currentMillis - previousTempHum >= tempHumInterval) {
+    if (currentMillis - previousTempHum >= tempHumInterval) 
+    {
       previousTempHum += tempHumInterval;
 
-      if (sht.readSample()) {
-      Serial.print("SHT:\n");
-      Serial.print("  RH: ");
-      Serial.print(sht.getHumidity(), 2);
-      Serial.print("\n");
-      Serial.print("  T:  ");
-      Serial.print(sht.getTemperature(), 2);
-      Serial.print("\n");
+      if (sht.readSample()) 
+      {
+      Serial.println(DebugMessages::SensirionSensor);
+      
+      Serial.print(DebugMessages::RealHumidityAbbreviation);
+      Serial.println(sht.getHumidity(), 2);
+      
+      Serial.print(DebugMessages::TemperatureAbbreviation);
+      Serial.println(sht.getTemperature(), 2);
+      
       temp = sht.getTemperature();
       hum = sht.getHumidity();
-  } else {
-      Serial.print("Error in readSample()\n");
+    } 
+    else 
+    {
+        Serial.println(DebugMessages::SensirionSensorReadError);
+    }
   }
-      Serial.println(String(temp));
-    }
 }
 
-void updateOLED() {
-   if (currentMillis - previousOled >= oledInterval) {
-     previousOled += oledInterval;
+void updateOLED() 
+{
+  if (currentMillis - previousOled >= oledInterval) 
+  {
+    previousOled += oledInterval;
 
-    String ln3;
-    String ln1;
+    String line1;
+    String line2;
+    String line3;
 
-    if (inUSAQI) {
-      ln1 = "AQI:" + String(PM_TO_AQI_US(pm25)) +  " CO2:" + String(Co2);
-    } else {
-      ln1 = "PM:" + String(pm25) +  " CO2:" + String(Co2);
+    if (inUSAQI) 
+    {
+      line1 = OLEDStrings::AQIAbbreviation + String(PM_TO_AQI_US(pm25)) + " " + OLEDStrings::CO2Abbreviation + String(Co2);
+    } 
+    else 
+    {
+      line1 = "PM:" + String(pm25) +  " CO2:" + String(Co2);
     }
 
-     String ln2 = "TVOC:" + String(TVOC) + " NOX:" + String(NOX);
+    line2 = "TVOC:" + String(TVOC) + " NOX:" + String(NOX);
 
-      if (inF) {
-        ln3 = "F:" + String((temp* 9 / 5) + 32) + " H:" + String(hum)+"%";
-        } else {
-        ln3 = "C:" + String(temp) + " H:" + String(hum)+"%";
-       }
-     updateOLED2(ln1, ln2, ln3);
-   }
+    if (inF) 
+    {
+      line3 = "F:" + String((temp* 9 / 5) + 32) + " H:" + String(hum)+"%";
+    } 
+    else 
+    {
+      line3 = "C:" + String(temp) + " H:" + String(hum)+"%";
+    }
+    
+    updateOLED2(line1, line2, line3);
+  }
 }
 
-void updateOLED2(String ln1, String ln2, String ln3) {
+void updateOLED2(String ln1, String ln2, String ln3) 
+{
   char buf[9];
   u8g2.firstPage();
   u8g2.firstPage();
-  do {
-  u8g2.setFont(u8g2_font_t0_16_tf);
-  u8g2.drawStr(1, 10, String(ln1).c_str());
-  u8g2.drawStr(1, 30, String(ln2).c_str());
-  u8g2.drawStr(1, 50, String(ln3).c_str());
-    } while ( u8g2.nextPage() );
+  do 
+  {
+    u8g2.setFont(u8g2_font_t0_16_tf);
+    u8g2.drawStr(1, 10, String(ln1).c_str());
+    u8g2.drawStr(1, 30, String(ln2).c_str());
+    u8g2.drawStr(1, 50, String(ln3).c_str());
+  } 
+    while ( u8g2.nextPage() );
 }
 
-void sendToMQTTServer() {
+void sendToMQTTServer() 
+{
+  Serial.println("Got into sentToMQTTServer!");
+
  char noxstr[4];
   itoa(NOX, noxstr, 4);
   char tvocstr[4];
@@ -490,8 +552,10 @@ void sendToMQTTServer() {
   mqtt_client.loop(); 
 }
 
-void sendToServer() {
-   if (currentMillis - previoussendToServer >= sendToServerInterval) {
+void sendToServer() 
+{
+   if (currentMillis - previoussendToServer >= sendToServerInterval) 
+   {
      previoussendToServer += sendToServerInterval;
       String payload = "{\"wifi\":" + String(WiFi.RSSI())
       + (Co2 < 0 ? "" : ", \"rco2\":" + String(Co2))
@@ -505,7 +569,8 @@ void sendToServer() {
       + (hum < 0 ? "" : ", \"rhum\":" + String(hum))
       + "}";
 
-      if(WiFi.status()== WL_CONNECTED){
+      if(WiFi.status()== WL_CONNECTED)
+      {
         Serial.println(payload);
         String POSTURL = APIROOT + "sensors/airgradient:" + String(ESP.getChipId(), HEX) + "/measures";
         Serial.println(POSTURL);
@@ -519,7 +584,8 @@ void sendToServer() {
         Serial.println(response);
         http.end();
       }
-      else {
+      else 
+      {
         Serial.println("WiFi Disconnected");
       }
    }
@@ -533,7 +599,8 @@ void sendToServer() {
    updateOLED2("90s to connect", "to Wifi Hotspot", HOTSPOT);
    wifiManager.setTimeout(90);
 
-   if (!wifiManager.autoConnect((const char * ) HOTSPOT.c_str())) {
+   if (!wifiManager.autoConnect((const char * ) HOTSPOT.c_str())) 
+   {
      updateOLED2("booting into", "offline mode", "");
      Serial.println("failed to connect and hit timeout");
      delay(6000);
@@ -545,6 +612,8 @@ void sendToServer() {
 // Should be called in the loop function and it will take care if connecting.
 void mqtt_connect() 
 {
+  Serial.println("Got into mqtt_connect!");
+
   int8_t ret;
 
   // Stop if already connected.
@@ -577,6 +646,8 @@ void mqtt_connect()
 
 void mqtt_publish(char *sub_topic, const char *payload) 
 {
+  Serial.println("Got into mqtt_publish!");
+  
   char mqtt_topic[80];
   strcpy(mqtt_topic, mqtt_location);
   strcat(mqtt_topic, "/");
@@ -589,6 +660,8 @@ void mqtt_publish(char *sub_topic, const char *payload)
 
 void readConfig(String cFilename)
 {
+  Serial.println("Got into readConfig!");
+
   if (LittleFS.exists(cFilename)) 
   {
     Serial.println("Reading config file");
@@ -629,6 +702,8 @@ void readConfig(String cFilename)
 
 void saveConfig(String cFilename) 
 {
+  Serial.println("Got into saveConfig!");
+
   Serial.println("Saving config");
   
   DynamicJsonDocument json(1024);
