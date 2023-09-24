@@ -54,10 +54,8 @@ This implementation writes to an MQTT server of your choice.
 #include <SensirionI2CSgp41.h>
 #include <NOxGasIndexAlgorithm.h>
 #include <VOCGasIndexAlgorithm.h>
-#include "StringResources.h"
-
-
 #include <U8g2lib.h>
+#include "StringResources.h"
 
 AirGradient ag = AirGradient();
 SensirionI2CSgp41 sgp41;
@@ -216,6 +214,7 @@ void loop() {
   updateTempHum();
   sendToServer();
   //sendToMQTTServer();
+  Serial.println(DebugMessages::HelloWorld);
 }
 
 void inConf(){
