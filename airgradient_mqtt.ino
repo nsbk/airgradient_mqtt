@@ -54,6 +54,7 @@ This implementation writes to an MQTT server of your choice.
 #include <SensirionI2CSgp41.h>
 #include <NOxGasIndexAlgorithm.h>
 #include <VOCGasIndexAlgorithm.h>
+#include "StringResources.h"
 
 
 #include <U8g2lib.h>
@@ -81,7 +82,7 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
 // CONFIGURATION START
 
 //set to the endpoint you would like to use
-//String APIROOT = "http://hw.airgradient.com/";
+String APIROOT = "http://hw.airgradient.com/";
 
 // set to true to switch from Celcius to Fahrenheit
 boolean inF = true;
@@ -145,7 +146,8 @@ unsigned long releasedTime = 0;
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("Hello");
+  Serial.println(DebugMessages::HelloWorld);
+
   u8g2.begin();
   sht.init();
   sht.setAccuracy(SHTSensor::SHT_ACCURACY_MEDIUM);
@@ -158,9 +160,14 @@ void setup() {
   if (buttonConfig>3) buttonConfig=0;
   delay(400);
   setConfig();
-  Serial.println("buttonConfig: "+String(buttonConfig));
-   updateOLED2("Press Button", "Now for", "Config Menu");
-    delay(2000);
+  Serial.println("buttonConfig: " + String(buttonConfig));
+  
+  updateOLED2(
+    OLEDStrings::STARTUP_CONFIG_PROMPT_LINE1, 
+    OLEDStrings::STARTUP_CONFIG_PROMPT_LINE2, 
+    OLEDStrings::STARTUP_CONFIG_PROMPT_LINE3);
+  
+  delay(2000);
   pinMode(D7, INPUT_PULLUP);
   currentState = digitalRead(D7);
   if (currentState == LOW)
@@ -185,21 +192,21 @@ void setup() {
 
   // get file storage going
   //Start LittleFS
-  if(LittleFS.begin()){
-    Serial.println("Mounted LittleFS");
-    readConfig("/config.json");  
-  } else {
-    Serial.println("An Error has occurred while mounting LittleFS");
-  }
+  // if(LittleFS.begin()){
+  //   Serial.println("Mounted LittleFS");
+  //   readConfig("/config.json");  
+  // } else {
+  //   Serial.println("An Error has occurred while mounting LittleFS");
+  // }
 
 }
 
 void loop() {
 
   // probably need a better way to check this
-  if (connectWIFI){
-      mqtt_connect();
-    }
+  // if (connectWIFI){
+  //     mqtt_connect();
+  //   }
 
   currentMillis = millis();
   updateTVOC();
@@ -207,8 +214,8 @@ void loop() {
   updateCo2();
   updatePm();
   updateTempHum();
-  //sendToServer();
-  sendToMQTTServer();
+  sendToServer();
+  //sendToMQTTServer();
 }
 
 void inConf(){
@@ -484,40 +491,40 @@ void sendToMQTTServer() {
   mqtt_client.loop(); 
 }
 
-// void sendToServer() {
-//    if (currentMillis - previoussendToServer >= sendToServerInterval) {
-//      previoussendToServer += sendToServerInterval;
-//       String payload = "{\"wifi\":" + String(WiFi.RSSI())
-//       + (Co2 < 0 ? "" : ", \"rco2\":" + String(Co2))
-//       + (pm01 < 0 ? "" : ", \"pm01\":" + String(pm01))
-//       + (pm25 < 0 ? "" : ", \"pm02\":" + String(pm25))
-//       + (pm10 < 0 ? "" : ", \"pm10\":" + String(pm10))
-//       + (pm03PCount < 0 ? "" : ", \"pm003_count\":" + String(pm03PCount))
-//       + (TVOC < 0 ? "" : ", \"tvoc_index\":" + String(TVOC))
-//       + (NOX < 0 ? "" : ", \"nox_index\":" + String(NOX))
-//       + ", \"atmp\":" + String(temp)
-//       + (hum < 0 ? "" : ", \"rhum\":" + String(hum))
-//       + "}";
+void sendToServer() {
+   if (currentMillis - previoussendToServer >= sendToServerInterval) {
+     previoussendToServer += sendToServerInterval;
+      String payload = "{\"wifi\":" + String(WiFi.RSSI())
+      + (Co2 < 0 ? "" : ", \"rco2\":" + String(Co2))
+      + (pm01 < 0 ? "" : ", \"pm01\":" + String(pm01))
+      + (pm25 < 0 ? "" : ", \"pm02\":" + String(pm25))
+      + (pm10 < 0 ? "" : ", \"pm10\":" + String(pm10))
+      + (pm03PCount < 0 ? "" : ", \"pm003_count\":" + String(pm03PCount))
+      + (TVOC < 0 ? "" : ", \"tvoc_index\":" + String(TVOC))
+      + (NOX < 0 ? "" : ", \"nox_index\":" + String(NOX))
+      + ", \"atmp\":" + String(temp)
+      + (hum < 0 ? "" : ", \"rhum\":" + String(hum))
+      + "}";
 
-//       if(WiFi.status()== WL_CONNECTED){
-//         Serial.println(payload);
-//         String POSTURL = APIROOT + "sensors/airgradient:" + String(ESP.getChipId(), HEX) + "/measures";
-//         Serial.println(POSTURL);
-//         WiFiClient client;
-//         HTTPClient http;
-//         http.begin(client, POSTURL);
-//         http.addHeader("content-type", "application/json");
-//         int httpCode = http.POST(payload);
-//         String response = http.getString();
-//         Serial.println(httpCode);
-//         Serial.println(response);
-//         http.end();
-//       }
-//       else {
-//         Serial.println("WiFi Disconnected");
-//       }
-//    }
-// }
+      if(WiFi.status()== WL_CONNECTED){
+        Serial.println(payload);
+        String POSTURL = APIROOT + "sensors/airgradient:" + String(ESP.getChipId(), HEX) + "/measures";
+        Serial.println(POSTURL);
+        WiFiClient client;
+        HTTPClient http;
+        http.begin(client, POSTURL);
+        http.addHeader("content-type", "application/json");
+        int httpCode = http.POST(payload);
+        String response = http.getString();
+        Serial.println(httpCode);
+        Serial.println(response);
+        http.end();
+      }
+      else {
+        Serial.println("WiFi Disconnected");
+      }
+   }
+}
 
 // Wifi Manager
  void connectToWifi() {
