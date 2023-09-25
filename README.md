@@ -46,24 +46,49 @@ I use Home Assistant to track and display the sensor status. Define the sensors 
 ```yaml
 # Air Gradient sensors
 mqtt:
-  sensor:
-    - name: 'Temperature office'
-      state_topic: 'esp/dht/office'
-      unit_of_measurement: '..C'
-      value_template: '{{ value_json.atmp | round(1) }}'
-
-    - name: 'Humidity office'
-      state_topic: 'esp/dht/office'
-      unit_of_measurement: '%'
-      value_template: '{{ value_json.rhum }}'
-
-    - name: 'CO2 office'
-      state_topic: 'esp/dht/office'
-      unit_of_measurement: 'ppm'
-      value_template: '{{ value_json.rco2 }}'
-
-    - name: 'PM2 office'
-      state_topic: 'esp/dht/office'
-      unit_of_measurement: 'ppm'
-      value_template: '{{ value_json.pm02 }}'
+  - sensor:
+      name: "Room-name Temperature"
+      state_topic: "home/roomname/temperature"
+      unit_of_measurement: "°F"
+  - sensor:
+      name: "Room-name Humidity"
+      state_topic: "home/roomname/humidity"
+      unit_of_measurement: "%"
+  - sensor:
+      name: "Room-name NOX Index"
+      state_topic: "home/roomname/nox_index"
+  - sensor:
+      name: "Room-name TVOC Index"
+      state_topic: "home/roomname/tvoc_index"
+  - sensor:
+      name: "Room-name PM 1"
+      state_topic: "home/roomname/pm01"
+      unit_of_measurement: "ug/m3"
+  - sensor:
+      name: "Room-name PM 2.5"
+      state_topic: "home/roomname/pm25"
+      unit_of_measurement: "ug/m3"
+  - sensor:
+      name: "Room-name AQI"
+      state_topic: "home/roomname/pm25AQI"
+  - sensor:
+      name: "Room-name PM 0.3"
+      state_topic: "home/roomname/pm03"
+      unit_of_measurement: "ug/m3"
+  - sensor:
+      name: "Room-name PM 10"
+      state_topic: "home/roomname/pm10"
+      unit_of_measurement: "ug/m3"
+  - sensor:
+      name: "Room-name CO2"
+      state_topic: "home/roomname/co2"
+      unit_of_measurement: "ppm"
 ```
+
+### general HA setup
+
+1. create a user for mqtt
+1. setup the broker. configure it for the user
+1. point the publisher or subscriber to the broker. has to be able to call mqtt:// instead of http:// and access the port
+1. add sensors to the yaml in home assistant to receive the data based on the topic
+1. update the UI to show those sensors

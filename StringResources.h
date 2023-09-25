@@ -26,7 +26,7 @@ class OLEDStrings
         static inline const String RebootingLine3 = "5 seconds";
 
         static inline const String ConfigTempC = "Temp. in C";
-        static inline const String ConfigTempF = "Temp. in C";
+        static inline const String ConfigTempF = "Temp. in F";
         static inline const String ConfigPMAQI = "PM in US AQI";
         static inline const String ConfigPMugm3 = "PM in ug/m3";
         static inline const String ConfigPMμgm3 = "PM in μg/m3";

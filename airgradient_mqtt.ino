@@ -127,13 +127,15 @@ int Co2 = 0;
 const int pmInterval = 5000;
 unsigned long previousPm = 0;
 int pm25 = 0;
+int pm25AQI = 0;
 int pm01 = 0;
 int pm10 = 0;
-int pm03PCount = 0;
+int pm03Count = 0;
 
 const int tempHumInterval = 2500;
 unsigned long previousTempHum = 0;
-float temp = 0;
+float tempC = 0;
+float tempF = 0;
 int hum = 0;
 
 int buttonConfig=0;
@@ -165,8 +167,8 @@ void setup() {
     OLEDStrings::StartupConfigPromptLine1, 
     OLEDStrings::StartupConfigPromptLine2, 
     OLEDStrings::StartupConfigPromptLine3);
-  
   delay(2000);
+
   pinMode(D7, INPUT_PULLUP);
   currentState = digitalRead(D7);
   if (currentState == LOW)
@@ -177,9 +179,21 @@ void setup() {
       OLEDStrings::EnteringConfigLine3
     );
     delay(3000);
+
     lastState = HIGH;
     setConfig();
     inConf();
+  }
+
+  // get file storage going
+  //Start LittleFS
+  // filesystem has to be setup before connectToWifi, as writing MQTT data locally depends on it
+  Serial.println("trying to mount the filesystem");
+  if(LittleFS.begin()){
+    Serial.println("Mounted LittleFS");
+    readConfig("/config.json");  
+  } else {
+    Serial.println("An Error has occurred while mounting LittleFS");
   }
 
   if (connectWIFI)
@@ -196,24 +210,14 @@ void setup() {
   ag.CO2_Init();
   ag.PMS_Init();
   ag.TMP_RH_Init(0x44);
-
-  // get file storage going
-  //Start LittleFS
-  // if(LittleFS.begin()){
-  //   Serial.println("Mounted LittleFS");
-  //   readConfig("/config.json");  
-  // } else {
-  //   Serial.println("An Error has occurred while mounting LittleFS");
-  // }
-
 }
 
 void loop() {
 
-  // probably need a better way to check this
-  // if (connectWIFI){
-  //     mqtt_connect();
-  //   }
+  //probably need a better way to check this
+  if (connectWIFI){
+      mqtt_connect();
+    }
 
   currentMillis = millis();
   updateTVOC();
@@ -221,8 +225,8 @@ void loop() {
   updateCo2();
   updatePm();
   updateTempHum();
-  sendToServer();
-  //sendToMQTTServer();
+  //sendToServer();
+  sendToMQTTServer();
   Serial.println(DebugMessages::HelloWorld);
 }
 
@@ -285,7 +289,7 @@ void inConf(){
   inConf();
 }
 
-
+// todo - config state machine for both OLED readout and reseting wifi
 void setConfig() {
   if (buttonConfig == 0) 
   {
@@ -353,7 +357,7 @@ void updateTVOC()
 
     delay(1000);
 
-    compensationT = static_cast<uint16_t>((temp + 45) * 65535 / 175);
+    compensationT = static_cast<uint16_t>((tempC + 45) * 65535 / 175);
     compensationRh = static_cast<uint16_t>(hum * 65535 / 100);
 
     if (conditioning_s > 0) 
@@ -371,7 +375,7 @@ void updateTVOC()
       previousTVOC += tvocInterval;
       TVOC = voc_algorithm.process(srawVoc);
       NOX = nox_algorithm.process(srawNox);
-      Serial.println(String(TVOC));
+      //Serial.println(String(TVOC));
     }
 }
 
@@ -381,7 +385,7 @@ void updateCo2()
     {
       previousCo2 += co2Interval;
       Co2 = ag.getCO2_Raw();
-      Serial.println(String(Co2));
+      //Serial.println(String(Co2));
     }
 }
 
@@ -392,9 +396,10 @@ void updatePm()
       previousPm += pmInterval;
       pm01 = ag.getPM1_Raw();
       pm25 = ag.getPM2_Raw();
+      pm25AQI =  PM_TO_AQI_US(pm25);
       pm10 = ag.getPM10_Raw();
-      pm03PCount = ag.getPM0_3Count();
-      Serial.println(String(pm25));
+      pm03Count = ag.getPM0_3Count();
+      //Serial.println(String(pm25));
     }
 }
 
@@ -406,15 +411,16 @@ void updateTempHum()
 
       if (sht.readSample()) 
       {
-      Serial.println(DebugMessages::SensirionSensor);
+      //Serial.println(DebugMessages::SensirionSensor);
       
-      Serial.print(DebugMessages::RealHumidityAbbreviation);
-      Serial.println(sht.getHumidity(), 2);
+      //Serial.print(DebugMessages::RealHumidityAbbreviation);
+      //Serial.println(sht.getHumidity(), 2);
       
-      Serial.print(DebugMessages::TemperatureAbbreviation);
-      Serial.println(sht.getTemperature(), 2);
+      //Serial.print(DebugMessages::TemperatureAbbreviation);
+      //Serial.println(sht.getTemperature(), 2);
       
-      temp = sht.getTemperature();
+      tempC = sht.getTemperature();
+      tempF = (tempC* 9 / 5) + 32;
       hum = sht.getHumidity();
     } 
     else 
@@ -447,11 +453,11 @@ void updateOLED()
 
     if (inF) 
     {
-      line3 = "F:" + String((temp* 9 / 5) + 32) + " H:" + String(hum)+"%";
+      line3 = "F:" + String(tempF) + " H:" + String(hum)+"%";
     } 
     else 
     {
-      line3 = "C:" + String(temp) + " H:" + String(hum)+"%";
+      line3 = "C:" + String(tempC) + " H:" + String(hum)+"%";
     }
     
     updateOLED2(line1, line2, line3);
@@ -475,26 +481,34 @@ void updateOLED2(String ln1, String ln2, String ln3)
 
 void sendToMQTTServer() 
 {
-  Serial.println("Got into sentToMQTTServer!");
+  Serial.println("Got into sendToMQTTServer!");
 
- char noxstr[4];
-  itoa(NOX, noxstr, 4);
-  char tvocstr[4];
-  itoa(TVOC, tvocstr, 4);
-  char pm01str[4];
-  itoa(pm01, pm01str, 4);
-  char pm25str[4];
-  itoa(pm25, pm25str, 4);
-  char pm10str[4];
-  itoa(pm10, pm10str, 4);
-  char pm03str[4];
-  itoa(pm03PCount, pm03str, 4);
-  char co2str[4];
-  itoa(Co2, co2str, 4);
-  char tempstr[4];
-  itoa(temp, tempstr, 4);
-  char humstr[4];
-  itoa(hum, humstr, 4);
+
+  Serial.print("NOX Raw: ");
+  Serial.println(NOX);
+  char noxstr[10];
+  itoa(NOX, noxstr, 10);
+  Serial.print("NOX Converted for transmission: ");
+  Serial.println(noxstr);
+
+  char tvocstr[10];
+  itoa(TVOC, tvocstr, 10);
+  char pm01str[10];
+  itoa(pm01, pm01str, 10);
+  char pm25str[10];
+  itoa(pm25, pm25str, 10);
+  char pm25AQIstr[10];
+  itoa(pm25AQI, pm25AQIstr, 10);
+  char pm10str[10];
+  itoa(pm10, pm10str, 10);
+  char pm03str[10];
+  itoa(pm03Count, pm03str, 10);
+  char co2str[10];
+  itoa(Co2, co2str, 10);
+  char tempstr[10];
+  itoa(tempF, tempstr, 10);
+  char humstr[10];
+  itoa(hum, humstr, 10);
 
   char noxTopic[10];
   String noxTopicString = "nox_index";
@@ -512,9 +526,9 @@ void sendToMQTTServer()
   String pm25TopicString = "pm25";
   pm25TopicString.toCharArray(pm25Topic, 12);
   
-  // char pm25AQITopic[12];
+  char pm25AQITopic[12];
   String pm25AQITopicString = "pm25AQI";
-  // pm25AQITopicString.toCharArray(pm25AQITopic, 12);
+  pm25AQITopicString.toCharArray(pm25AQITopic, 12);
   
   char pm10Topic[12];
   String pm10TopicString = "pm10";
@@ -541,7 +555,7 @@ void sendToMQTTServer()
   mqtt_publish(tvocTopic, tvocstr);
   mqtt_publish(pm01Topic, pm01str);
   mqtt_publish(pm25Topic, pm25str);
-  //mqtt_publish(pm25AQITopic, String(PM_TO_AQI_US(pm25)));
+  mqtt_publish(pm25AQITopic, pm25AQIstr);
   mqtt_publish(pm10Topic, pm10str);
   mqtt_publish(pm03Topic, pm03str);
   mqtt_publish(co2Topic, co2str);
@@ -562,10 +576,10 @@ void sendToServer()
       + (pm01 < 0 ? "" : ", \"pm01\":" + String(pm01))
       + (pm25 < 0 ? "" : ", \"pm02\":" + String(pm25))
       + (pm10 < 0 ? "" : ", \"pm10\":" + String(pm10))
-      + (pm03PCount < 0 ? "" : ", \"pm003_count\":" + String(pm03PCount))
+      + (pm03Count < 0 ? "" : ", \"pm003_count\":" + String(pm03Count))
       + (TVOC < 0 ? "" : ", \"tvoc_index\":" + String(TVOC))
       + (NOX < 0 ? "" : ", \"nox_index\":" + String(NOX))
-      + ", \"atmp\":" + String(temp)
+      + ", \"atmp\":" + String(tempF)
       + (hum < 0 ? "" : ", \"rhum\":" + String(hum))
       + "}";
 
@@ -591,11 +605,44 @@ void sendToServer()
    }
 }
 
+
+//flag for saving data - defaults to false unless AP is setup
+bool shouldSaveConfig = false;
+
+//callback function telling us we need to save the config
+void saveConfigCallback() {
+  Serial.println("Should save config");
+  shouldSaveConfig = true;
+}
+
 // Wifi Manager
- void connectToWifi() {
-   WiFiManager wifiManager;
-   //WiFi.disconnect(); //to delete previous saved hotspot
-   String HOTSPOT = "AirGradient-" + String(ESP.getChipId(), HEX);
+void connectToWifi() {
+  WiFiManager wifiManager;
+   
+  // Delete previously saved data
+  //wifiManager.resetSettings(); 
+   
+   Serial.println("Setup the WifiManage callback");
+  // When data is saved, trigger the callback that can save the custom parameters locally
+  wifiManager.setSaveConfigCallback(saveConfigCallback);
+
+  // Adds custom parameters for entering MQTT configuration.
+  // id/name, placeholder/prompt, default, length
+  WiFiManagerParameter custom_mqtt_server("server", "MQTT Server", "", 40);
+  WiFiManagerParameter custom_mqtt_user("user", "MQTT Username", "", 40);
+  WiFiManagerParameter custom_mqtt_password("password", "MQTT Password", "", 40);
+  WiFiManagerParameter custom_mqtt_location("location", "MQTT Location", "", 40);
+  WiFiManagerParameter custom_mqtt_room("room", "MQTT Room", "", 40);
+
+  wifiManager.addParameter(&custom_mqtt_server);
+  wifiManager.addParameter(&custom_mqtt_user);
+  wifiManager.addParameter(&custom_mqtt_password);
+  wifiManager.addParameter(&custom_mqtt_location);
+  wifiManager.addParameter(&custom_mqtt_room);
+   
+   Serial.println("Custom parameters for mqtt are set");
+
+   String HOTSPOT = "AG-" + String(ESP.getChipId(), HEX);
    updateOLED2("90s to connect", "to Wifi Hotspot", HOTSPOT);
    wifiManager.setTimeout(90);
 
@@ -606,6 +653,19 @@ void sendToServer()
      delay(6000);
    }
 
+
+  // when is the callback executed so this goes from false to true?
+  if (shouldSaveConfig) 
+  {
+    Serial.println("Storing the MQTT config in local variables for saving");
+
+    strcpy(mqtt_server, custom_mqtt_server.getValue());
+    strcpy(mqtt_user, custom_mqtt_user.getValue());
+    strcpy(mqtt_password, custom_mqtt_password.getValue());
+    strcpy(mqtt_location, custom_mqtt_location.getValue());
+    strcpy(mqtt_room, custom_mqtt_room.getValue());
+    saveConfig("/config.json");
+  }
 }
 
 // Function to connect and reconnect as necessary to the MQTT server.
@@ -654,8 +714,25 @@ void mqtt_publish(char *sub_topic, const char *payload)
   strcat(mqtt_topic, mqtt_room);
   strcat(mqtt_topic, "/");
   strcat(mqtt_topic, sub_topic);
+
+  Serial.print("topic: ");
+  Serial.println(mqtt_topic);
+  Serial.print("subtopic: ");
+  Serial.println(sub_topic);
+  Serial.print("payload: ");
+  Serial.println(payload);
       
-  mqtt_client.publish(mqtt_topic, payload);
+      // todo - receive value. does this denote failure?
+  bool publishResult = mqtt_client.publish(mqtt_topic, payload);
+
+  if (publishResult)
+  {
+    Serial.println("publish succeeded");
+  }
+  else
+  {
+    Serial.println("publish failed");
+  }
 }
 
 void readConfig(String cFilename)
