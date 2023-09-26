@@ -54,7 +54,9 @@ This implementation writes to an MQTT server of your choice.
 #include <NOxGasIndexAlgorithm.h>
 #include <VOCGasIndexAlgorithm.h>
 #include <U8g2lib.h>
+#include <StateMachine.h>
 #include "StringResources.h"
+#include "SampleInterval.h"
 #include "QualitySample.h"
 #include "MQTTConfiguration.h"
 
@@ -102,27 +104,15 @@ MQTTConfiguration mqttConfiguration = MQTTConfiguration();
 
 // CONFIGURATION END
 
-
+// use another QualitySample as 'previoussample' ?
 unsigned long currentMillis = 0;
-
-const int oledInterval = 5000;
 unsigned long previousOled = 0;
-
-const int sendToServerInterval = 10000;
 unsigned long previoussendToServer = 0;
-
-const int tvocInterval = 1000;
-unsigned long previousTVOC = 0;
-int TVOC = 0;
-int NOX = 0;
-
-const int co2Interval = 5000;
 unsigned long previousCo2 = 0;
-
-const int pmInterval = 5000;
 unsigned long previousPm = 0;
-const int tempHumInterval = 2500;
 unsigned long previousTempHum = 0;
+unsigned long previousTVOC = 0;
+
 QualitySample airQuality = QualitySample();
 
 int buttonConfig=0;
@@ -357,9 +347,9 @@ void updateTVOC()
         error = sgp41.measureRawSignals(compensationRh, compensationT, srawVoc, srawNox);
     }
 
-    if (currentMillis - previousTVOC >= tvocInterval) 
+    if (currentMillis - previousTVOC >= SampleInterval::TVOC) 
     {
-      previousTVOC += tvocInterval;
+      previousTVOC += SampleInterval::TVOC;
       airQuality.TVOC = voc_algorithm.process(srawVoc);
       airQuality.NOX = nox_algorithm.process(srawNox);
       //Serial.println(String(TVOC));
@@ -368,9 +358,9 @@ void updateTVOC()
 
 void updateCo2()
 {
-    if (currentMillis - previousCo2 >= co2Interval) 
+    if (currentMillis - previousCo2 >= SampleInterval::CO2) 
     {
-      previousCo2 += co2Interval;
+      previousCo2 += SampleInterval::CO2;
       airQuality.CO2 = ag.getCO2_Raw();
       //Serial.println(String(Co2));
     }
@@ -378,9 +368,9 @@ void updateCo2()
 
 void updatePm()
 {
-    if (currentMillis - previousPm >= pmInterval) 
+    if (currentMillis - previousPm >= SampleInterval::PM) 
     {
-      previousPm += pmInterval;
+      previousPm += SampleInterval::PM;
       airQuality.PM1 = ag.getPM1_Raw();
       airQuality.PM25 = ag.getPM2_Raw();
       airQuality.PM10 = ag.getPM10_Raw();
@@ -389,9 +379,9 @@ void updatePm()
 
 void updateTempHum()
 {
-    if (currentMillis - previousTempHum >= tempHumInterval) 
+    if (currentMillis - previousTempHum >= SampleInterval::TemperatureHumidity) 
     {
-      previousTempHum += tempHumInterval;
+      previousTempHum += SampleInterval::TemperatureHumidity;
 
       if (sht.readSample()) 
       {
@@ -415,9 +405,9 @@ void updateTempHum()
 
 void updateOLED() 
 {
-  if (currentMillis - previousOled >= oledInterval) 
+  if (currentMillis - previousOled >= SampleInterval::ScreenUpdate) 
   {
-    previousOled += oledInterval;
+    previousOled += SampleInterval::ScreenUpdate;
 
     String line1;
     String line2;
@@ -553,9 +543,9 @@ void sendToMQTTServer()
 
 void sendToServer() 
 {
-   if (currentMillis - previoussendToServer >= sendToServerInterval) 
+   if (currentMillis - previoussendToServer >= SampleInterval::Reporting) 
    {
-     previoussendToServer += sendToServerInterval;
+     previoussendToServer += SampleInterval::Reporting;
       String payload = "{\"wifi\":" + String(WiFi.RSSI())
       + (airQuality.CO2 < 0 ? "" : ", \"rco2\":" + String(airQuality.CO2))
       + (airQuality.PM1 < 0 ? "" : ", \"pm01\":" + String(airQuality.PM1))
