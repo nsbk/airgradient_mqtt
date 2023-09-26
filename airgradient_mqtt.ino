@@ -56,6 +56,7 @@ This implementation writes to an MQTT server of your choice.
 #include <U8g2lib.h>
 #include "StringResources.h"
 #include "QualitySample.h"
+#include "MQTTConfiguration.h"
 
 AirGradient ag = AirGradient();
 SensirionI2CSgp41 sgp41;
@@ -97,12 +98,7 @@ boolean connectWIFI=true;
 WiFiClient client;
 PubSubClient mqtt_client(client);
 
-// PubSubClient expects char array
-char mqtt_server[40];
-char mqtt_user[40];
-char mqtt_password[40];
-char mqtt_location[40];
-char mqtt_room[40];
+MQTTConfiguration mqttConfiguration = MQTTConfiguration();
 
 // CONFIGURATION END
 
@@ -619,14 +615,12 @@ void connectToWifi() {
   WiFiManagerParameter custom_mqtt_server("server", "MQTT Server", "", 40);
   WiFiManagerParameter custom_mqtt_user("user", "MQTT Username", "", 40);
   WiFiManagerParameter custom_mqtt_password("password", "MQTT Password", "", 40);
-  WiFiManagerParameter custom_mqtt_location("location", "MQTT Location", "", 40);
-  WiFiManagerParameter custom_mqtt_room("room", "MQTT Room", "", 40);
+  WiFiManagerParameter custom_mqtt_topic("topic", "MQTT Tp[oc", "", 80);
 
   wifiManager.addParameter(&custom_mqtt_server);
   wifiManager.addParameter(&custom_mqtt_user);
   wifiManager.addParameter(&custom_mqtt_password);
-  wifiManager.addParameter(&custom_mqtt_location);
-  wifiManager.addParameter(&custom_mqtt_room);
+  wifiManager.addParameter(&custom_mqtt_topic);
    
    Serial.println("Custom parameters for mqtt are set");
 
@@ -647,11 +641,11 @@ void connectToWifi() {
   {
     Serial.println("Storing the MQTT config in local variables for saving");
 
-    strcpy(mqtt_server, custom_mqtt_server.getValue());
-    strcpy(mqtt_user, custom_mqtt_user.getValue());
-    strcpy(mqtt_password, custom_mqtt_password.getValue());
-    strcpy(mqtt_location, custom_mqtt_location.getValue());
-    strcpy(mqtt_room, custom_mqtt_room.getValue());
+    strcpy(mqttConfiguration.Server, custom_mqtt_server.getValue());
+    strcpy(mqttConfiguration.User, custom_mqtt_user.getValue());
+    strcpy(mqttConfiguration.Password, custom_mqtt_password.getValue());
+    strcpy(mqttConfiguration.Topic, custom_mqtt_topic.getValue());
+
     saveConfig("/config.json");
   }
 }
@@ -675,10 +669,13 @@ void mqtt_connect()
 
   String CID = String(ESP.getChipId(),HEX);
 
-  mqtt_client.setServer(mqtt_server,1883);
+  mqtt_client.setServer(mqttConfiguration.Server,1883);
 
   uint8_t retries = 3;
-  while ((ret = mqtt_client.connect((char *)CID.c_str(), mqtt_user, mqtt_password)) == 0) { // connect will return 0 for not connected   
+  
+  // connect will return 0 for not connected   
+  while ((ret = mqtt_client.connect((char *)CID.c_str(), mqttConfiguration.User, mqttConfiguration.Password)) == 0) 
+  { 
     //showTextRectangle("MQTT", "Failed "+String(mqtt_client.state()),true);
     Serial.println(mqtt_client.state());
     Serial.println(F("Retrying MQTT connection in 5 seconds..."));
@@ -697,9 +694,7 @@ void mqtt_publish(char *sub_topic, const char *payload)
   Serial.println("Got into mqtt_publish!");
   
   char mqtt_topic[80];
-  strcpy(mqtt_topic, mqtt_location);
-  strcat(mqtt_topic, "/");
-  strcat(mqtt_topic, mqtt_room);
+  strcpy(mqtt_topic, mqttConfiguration.Topic);
   strcat(mqtt_topic, "/");
   strcat(mqtt_topic, sub_topic);
 
@@ -725,8 +720,6 @@ void mqtt_publish(char *sub_topic, const char *payload)
 
 void readConfig(String cFilename)
 {
-  Serial.println("Got into readConfig!");
-
   if (LittleFS.exists(cFilename)) 
   {
     Serial.println("Reading config file");
@@ -744,11 +737,28 @@ void readConfig(String cFilename)
       if (!deserializeError) 
       {
         Serial.println("\nParsed json");
-        strcpy(mqtt_server, json["mqtt_server"]); 
-        strcpy(mqtt_user, json["mqtt_user"]);
-        strcpy(mqtt_password, json["mqtt_password"]);
+        strcpy(mqttConfiguration.Server, json["mqtt_server"]); 
+        strcpy(mqttConfiguration.User, json["mqtt_user"]);
+        strcpy(mqttConfiguration.Password, json["mqtt_password"]);
+
+        // this is temporary. Topic should be a WiFiManager field and get consume as is.
+        char mqtt_topic[80];
+        
+        char mqtt_location[40];
+        char mqtt_room[40];
         strcpy(mqtt_location, json["mqtt_location"]);
         strcpy(mqtt_room, json["mqtt_room"]);
+
+        strcpy(mqtt_topic, mqtt_location);
+        strcat(mqtt_topic, "/");
+        strcat(mqtt_topic, mqtt_room);
+
+        strcpy(mqttConfiguration.Topic, mqtt_topic);
+
+        //strcpy(mqttConfiguration.Topic, json["mqtt_topic"]);
+        Serial.println(mqttConfiguration.Server);
+        Serial.println(mqttConfiguration.User);
+        Serial.println(mqttConfiguration.Topic);
       }
       else 
       {
@@ -767,22 +777,23 @@ void readConfig(String cFilename)
 
 void saveConfig(String cFilename) 
 {
-  Serial.println("Got into saveConfig!");
-
   Serial.println("Saving config");
   
   DynamicJsonDocument json(1024);
-  json["mqtt_server"] = mqtt_server;
-  json["mqtt_user"] = mqtt_user;
-  json["mqtt_password"] = mqtt_password;
-  json["mqtt_location"] = mqtt_location;
-  json["mqtt_room"] = mqtt_room;
-  File configFile = LittleFS.open(cFilename,"w");
-  if (configFile) {
+  json["mqtt_server"] = mqttConfiguration.Server;
+  json["mqtt_user"] = mqttConfiguration.User;
+  json["mqtt_password"] = mqttConfiguration.Password;
+  json["mqtt_topic"] = mqttConfiguration.Topic;
+
+  File configFile = LittleFS.open(cFilename, "w");
+  if (configFile) 
+  {
     serializeJson(json, Serial);
     serializeJson(json, configFile);
     configFile.close();      
-  } else {
-    Serial.println("Failed to open config file for writing");
+  } 
+  else 
+  {
+    Serial.println("Failed to open config file for writing.");
   }
 }
