@@ -40,7 +40,6 @@ This implementation writes to an MQTT server of your choice.
 #include <ArduinoJson.h>
 #include <WiFiManager.h>
 #include <ESP8266WiFi.h>
-//#include <ArduinoOTA.h>
 #include <PubSubClient.h>
 //#include <Wire.h>
 
@@ -56,6 +55,7 @@ This implementation writes to an MQTT server of your choice.
 #include <VOCGasIndexAlgorithm.h>
 #include <U8g2lib.h>
 #include "StringResources.h"
+#include "QualitySample.h"
 
 AirGradient ag = AirGradient();
 SensirionI2CSgp41 sgp41;
@@ -122,21 +122,12 @@ int NOX = 0;
 
 const int co2Interval = 5000;
 unsigned long previousCo2 = 0;
-int Co2 = 0;
 
 const int pmInterval = 5000;
 unsigned long previousPm = 0;
-int pm25 = 0;
-int pm25AQI = 0;
-int pm01 = 0;
-int pm10 = 0;
-int pm03Count = 0;
-
 const int tempHumInterval = 2500;
 unsigned long previousTempHum = 0;
-float tempC = 0;
-float tempF = 0;
-int hum = 0;
+QualitySample airQuality = QualitySample();
 
 int buttonConfig=0;
 int lastState = LOW;
@@ -357,8 +348,8 @@ void updateTVOC()
 
     delay(1000);
 
-    compensationT = static_cast<uint16_t>((tempC + 45) * 65535 / 175);
-    compensationRh = static_cast<uint16_t>(hum * 65535 / 100);
+    compensationT = static_cast<uint16_t>((airQuality.TemperatureC + 45) * 65535 / 175);
+    compensationRh = static_cast<uint16_t>(airQuality.RelativeHumidity * 65535 / 100);
 
     if (conditioning_s > 0) 
     {
@@ -373,8 +364,8 @@ void updateTVOC()
     if (currentMillis - previousTVOC >= tvocInterval) 
     {
       previousTVOC += tvocInterval;
-      TVOC = voc_algorithm.process(srawVoc);
-      NOX = nox_algorithm.process(srawNox);
+      airQuality.TVOC = voc_algorithm.process(srawVoc);
+      airQuality.NOX = nox_algorithm.process(srawNox);
       //Serial.println(String(TVOC));
     }
 }
@@ -384,7 +375,7 @@ void updateCo2()
     if (currentMillis - previousCo2 >= co2Interval) 
     {
       previousCo2 += co2Interval;
-      Co2 = ag.getCO2_Raw();
+      airQuality.CO2 = ag.getCO2_Raw();
       //Serial.println(String(Co2));
     }
 }
@@ -394,12 +385,9 @@ void updatePm()
     if (currentMillis - previousPm >= pmInterval) 
     {
       previousPm += pmInterval;
-      pm01 = ag.getPM1_Raw();
-      pm25 = ag.getPM2_Raw();
-      pm25AQI =  PM_TO_AQI_US(pm25);
-      pm10 = ag.getPM10_Raw();
-      pm03Count = ag.getPM0_3Count();
-      //Serial.println(String(pm25));
+      airQuality.PM1 = ag.getPM1_Raw();
+      airQuality.PM25 = ag.getPM2_Raw();
+      airQuality.PM10 = ag.getPM10_Raw();
     }
 }
 
@@ -419,9 +407,8 @@ void updateTempHum()
       //Serial.print(DebugMessages::TemperatureAbbreviation);
       //Serial.println(sht.getTemperature(), 2);
       
-      tempC = sht.getTemperature();
-      tempF = (tempC* 9 / 5) + 32;
-      hum = sht.getHumidity();
+      airQuality.TemperatureC = sht.getTemperature();
+      airQuality.RelativeHumidity = sht.getHumidity();
     } 
     else 
     {
@@ -442,22 +429,27 @@ void updateOLED()
 
     if (inUSAQI) 
     {
-      line1 = OLEDStrings::AQIAbbreviation + String(PM_TO_AQI_US(pm25)) + " " + OLEDStrings::CO2Abbreviation + String(Co2);
+      line1 = OLEDStrings::AQIAbbreviation + ":" + String(airQuality.GetAQI()) + " " + 
+      OLEDStrings::CO2Abbreviation + ":" + String(airQuality.CO2);
     } 
     else 
     {
-      line1 = "PM:" + String(pm25) +  " CO2:" + String(Co2);
+      line1 = OLEDStrings::PMAbbreviation + ":" + String(airQuality.PM25) +  " " + 
+      OLEDStrings::CO2Abbreviation + ":" + String(airQuality.CO2);
     }
 
-    line2 = "TVOC:" + String(TVOC) + " NOX:" + String(NOX);
+    line2 = OLEDStrings::TVOCAbbreviation + ":" + String(airQuality.TVOC) + " " + 
+    OLEDStrings::NOXAbbreviation + ":" + String(airQuality.NOX);
 
     if (inF) 
     {
-      line3 = "F:" + String(tempF) + " H:" + String(hum)+"%";
+      line3 = OLEDStrings::TemperatureFAbbreviation + ":" + String(airQuality.TemperatureF()) + " " + 
+      OLEDStrings::RelativeHumidityAbbreviation + ":" + String(airQuality.RelativeHumidity) + QualitySample::RelativeHumidityUnits;
     } 
     else 
     {
-      line3 = "C:" + String(tempC) + " H:" + String(hum)+"%";
+      line3 = OLEDStrings::TemperatureCAbbreviation + ":" + String(airQuality.TemperatureC) + " " + 
+      OLEDStrings::RelativeHumidityAbbreviation + ":" + String(airQuality.RelativeHumidity) + QualitySample::RelativeHumidityUnits;
     }
     
     updateOLED2(line1, line2, line3);
@@ -485,30 +477,28 @@ void sendToMQTTServer()
 
 
   Serial.print("NOX Raw: ");
-  Serial.println(NOX);
+  Serial.println(airQuality.NOX);
   char noxstr[10];
-  itoa(NOX, noxstr, 10);
+  itoa(airQuality.NOX, noxstr, 10);
   Serial.print("NOX Converted for transmission: ");
   Serial.println(noxstr);
 
   char tvocstr[10];
-  itoa(TVOC, tvocstr, 10);
+  itoa(airQuality.TVOC, tvocstr, 10);
   char pm01str[10];
-  itoa(pm01, pm01str, 10);
+  itoa(airQuality.PM1, pm01str, 10);
   char pm25str[10];
-  itoa(pm25, pm25str, 10);
+  itoa(airQuality.PM25, pm25str, 10);
   char pm25AQIstr[10];
-  itoa(pm25AQI, pm25AQIstr, 10);
+  itoa(airQuality.GetAQI(), pm25AQIstr, 10);
   char pm10str[10];
-  itoa(pm10, pm10str, 10);
-  char pm03str[10];
-  itoa(pm03Count, pm03str, 10);
+  itoa(airQuality.PM10, pm10str, 10);
   char co2str[10];
-  itoa(Co2, co2str, 10);
+  itoa(airQuality.CO2, co2str, 10);
   char tempstr[10];
-  itoa(tempF, tempstr, 10);
+  itoa(airQuality.TemperatureF(), tempstr, 10);
   char humstr[10];
-  itoa(hum, humstr, 10);
+  itoa(airQuality.RelativeHumidity, humstr, 10);
 
   char noxTopic[10];
   String noxTopicString = "nox_index";
@@ -557,7 +547,6 @@ void sendToMQTTServer()
   mqtt_publish(pm25Topic, pm25str);
   mqtt_publish(pm25AQITopic, pm25AQIstr);
   mqtt_publish(pm10Topic, pm10str);
-  mqtt_publish(pm03Topic, pm03str);
   mqtt_publish(co2Topic, co2str);
   mqtt_publish(temperatureTopic, tempstr); 
   mqtt_publish(humidityTopic, humstr);  
@@ -572,15 +561,14 @@ void sendToServer()
    {
      previoussendToServer += sendToServerInterval;
       String payload = "{\"wifi\":" + String(WiFi.RSSI())
-      + (Co2 < 0 ? "" : ", \"rco2\":" + String(Co2))
-      + (pm01 < 0 ? "" : ", \"pm01\":" + String(pm01))
-      + (pm25 < 0 ? "" : ", \"pm02\":" + String(pm25))
-      + (pm10 < 0 ? "" : ", \"pm10\":" + String(pm10))
-      + (pm03Count < 0 ? "" : ", \"pm003_count\":" + String(pm03Count))
-      + (TVOC < 0 ? "" : ", \"tvoc_index\":" + String(TVOC))
-      + (NOX < 0 ? "" : ", \"nox_index\":" + String(NOX))
-      + ", \"atmp\":" + String(tempF)
-      + (hum < 0 ? "" : ", \"rhum\":" + String(hum))
+      + (airQuality.CO2 < 0 ? "" : ", \"rco2\":" + String(airQuality.CO2))
+      + (airQuality.PM1 < 0 ? "" : ", \"pm01\":" + String(airQuality.PM1))
+      + (airQuality.PM25 < 0 ? "" : ", \"pm02\":" + String(airQuality.PM25))
+      + (airQuality.PM10 < 0 ? "" : ", \"pm10\":" + String(airQuality.PM10))
+      + (airQuality.TVOC < 0 ? "" : ", \"tvoc_index\":" + String(airQuality.TVOC))
+      + (airQuality.NOX < 0 ? "" : ", \"nox_index\":" + String(airQuality.NOX))
+      + ", \"atmp\":" + String(airQuality.TemperatureF())
+      + (airQuality.RelativeHumidity < 0 ? "" : ", \"rhum\":" + String(airQuality.RelativeHumidity))
       + "}";
 
       if(WiFi.status()== WL_CONNECTED)
@@ -798,15 +786,3 @@ void saveConfig(String cFilename)
     Serial.println("Failed to open config file for writing");
   }
 }
-
-// Calculate PM2.5 US AQI
-int PM_TO_AQI_US(int pm02) {
-  if (pm02 <= 12.0) return ((50 - 0) / (12.0 - .0) * (pm02 - .0) + 0);
-  else if (pm02 <= 35.4) return ((100 - 50) / (35.4 - 12.0) * (pm02 - 12.0) + 50);
-  else if (pm02 <= 55.4) return ((150 - 100) / (55.4 - 35.4) * (pm02 - 35.4) + 100);
-  else if (pm02 <= 150.4) return ((200 - 150) / (150.4 - 55.4) * (pm02 - 55.4) + 150);
-  else if (pm02 <= 250.4) return ((300 - 200) / (250.4 - 150.4) * (pm02 - 150.4) + 200);
-  else if (pm02 <= 350.4) return ((400 - 300) / (350.4 - 250.4) * (pm02 - 250.4) + 300);
-  else if (pm02 <= 500.4) return ((500 - 400) / (500.4 - 350.4) * (pm02 - 350.4) + 400);
-  else return 500;
-};

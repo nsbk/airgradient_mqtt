@@ -32,11 +32,14 @@ class OLEDStrings
         static inline const String ConfigPMμgm3 = "PM in μg/m3";
         static inline const String ConfigSaveMessage = "Long Press Saves";
 
-        static inline const String AQIAbbreviation = "AQI:";
-        static inline const String CO2Abbreviation = "CO2:";
-        static inline const String PMAbbreviation = "PM:";
-        static inline const String TVOCAbbreviation = "TVOC:";
-        static inline const String NOXAbbreviation = "NOX:";
+        static inline const String AQIAbbreviation = "AQI";
+        static inline const String CO2Abbreviation = "CO2";
+        static inline const String PMAbbreviation = "PM";
+        static inline const String TVOCAbbreviation = "TVOC";
+        static inline const String NOXAbbreviation = "NOX";
+        static inline const String TemperatureCAbbreviation = "C";
+        static inline const String TemperatureFAbbreviation = "F";
+        static inline const String RelativeHumidityAbbreviation = "H";
 };
 
 class DebugMessages
