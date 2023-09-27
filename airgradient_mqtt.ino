@@ -347,12 +347,11 @@ void updateTVOC()
         error = sgp41.measureRawSignals(compensationRh, compensationT, srawVoc, srawNox);
     }
 
-    if (currentMillis - previousTVOC >= SampleInterval::TVOC) 
+    if (b - previousTVOC >= SampleInterval::TVOC) 
     {
       previousTVOC += SampleInterval::TVOC;
       airQuality.TVOC = voc_algorithm.process(srawVoc);
       airQuality.NOX = nox_algorithm.process(srawNox);
-      //Serial.println(String(TVOC));
     }
 }
 
@@ -362,7 +361,6 @@ void updateCo2()
     {
       previousCo2 += SampleInterval::CO2;
       airQuality.CO2 = ag.getCO2_Raw();
-      //Serial.println(String(Co2));
     }
 }
 
@@ -384,15 +382,7 @@ void updateTempHum()
       previousTempHum += SampleInterval::TemperatureHumidity;
 
       if (sht.readSample()) 
-      {
-      //Serial.println(DebugMessages::SensirionSensor);
-      
-      //Serial.print(DebugMessages::RealHumidityAbbreviation);
-      //Serial.println(sht.getHumidity(), 2);
-      
-      //Serial.print(DebugMessages::TemperatureAbbreviation);
-      //Serial.println(sht.getTemperature(), 2);
-      
+      {      
       airQuality.TemperatureC = sht.getTemperature();
       airQuality.RelativeHumidity = sht.getHumidity();
     } 
@@ -461,28 +451,30 @@ void sendToMQTTServer()
 {
   Serial.println("Got into sendToMQTTServer!");
 
-
-  Serial.print("NOX Raw: ");
-  Serial.println(airQuality.NOX);
   char noxstr[10];
   itoa(airQuality.NOX, noxstr, 10);
-  Serial.print("NOX Converted for transmission: ");
-  Serial.println(noxstr);
 
   char tvocstr[10];
   itoa(airQuality.TVOC, tvocstr, 10);
+  
   char pm01str[10];
   itoa(airQuality.PM1, pm01str, 10);
+  
   char pm25str[10];
   itoa(airQuality.PM25, pm25str, 10);
+  
   char pm25AQIstr[10];
   itoa(airQuality.GetAQI(), pm25AQIstr, 10);
+  
   char pm10str[10];
   itoa(airQuality.PM10, pm10str, 10);
+  
   char co2str[10];
   itoa(airQuality.CO2, co2str, 10);
+  
   char tempstr[10];
   itoa(airQuality.TemperatureF(), tempstr, 10);
+  
   char humstr[10];
   itoa(airQuality.RelativeHumidity, humstr, 10);
 
