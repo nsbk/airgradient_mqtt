@@ -54,11 +54,13 @@ This implementation writes to an MQTT server of your choice.
 #include <NOxGasIndexAlgorithm.h>
 #include <VOCGasIndexAlgorithm.h>
 #include <U8g2lib.h>
-#include <StateMachine.h>
+
 #include "StringResources.h"
 #include "SampleInterval.h"
 #include "QualitySample.h"
 #include "MQTTConfiguration.h"
+#include "Button.h"
+//#include "ConfigManager.h"
 
 AirGradient ag = AirGradient();
 SensirionI2CSgp41 sgp41;
@@ -99,9 +101,9 @@ boolean connectWIFI=true;
 
 WiFiClient client;
 PubSubClient mqtt_client(client);
-
 MQTTConfiguration mqttConfiguration = MQTTConfiguration();
 
+QualitySample airQuality = QualitySample();
 // CONFIGURATION END
 
 // use another QualitySample as 'previoussample' ?
@@ -113,17 +115,98 @@ unsigned long previousPm = 0;
 unsigned long previousTempHum = 0;
 unsigned long previousTVOC = 0;
 
-QualitySample airQuality = QualitySample();
 
-int buttonConfig=0;
+
+int displayModeConfig=0;
 int lastState = LOW;
 int currentState;
 unsigned long pressedTime  = 0;
 unsigned long releasedTime = 0;
 
+// Pin connected to AirGradient push button
+#define BUTTON_PIN D7
+
+// Get button feedback for a pin. Option to set a maximum time in milliseconds to get input
+Button GetButtonInput(int pin, int maxWaitTime = 0)
+{
+  Button result = Button();
+  unsigned long pressedTime2 = 0;
+  unsigned long releasedTime2 = 0;
+
+  int shortpresstime = 2500;
+  int longpresstime = 2500;
+
+  int lastButtonState = LOW;
+  bool isPressing = false;
+
+  int loopStartTime = millis();
+  while (!result.SingleClicked && !result.LongPressed)
+  {
+    // Pull-up resistor means a press will read as LOW - toggle to make it more intuitive
+    int buttonState = !digitalRead(pin);
+
+    // Button is pressed
+    if (lastButtonState == LOW && buttonState == HIGH) 
+    {
+      pressedTime2 = millis();
+      isPressing = true;
+    }
+
+    // Button is released - could be a single click
+    else if (lastButtonState == HIGH && buttonState == LOW) 
+    {
+      isPressing = false;
+      releasedTime2 = millis();
+      long pressDuration = releasedTime2 - pressedTime2;
+      if (pressDuration < shortpresstime) 
+      {
+        result.SingleClicked = true;
+      }
+    }
+
+    if (isPressing)
+    {
+      long pressedDuration = millis() - pressedTime2;
+      if (pressedDuration > longpresstime) 
+      {
+          result.LongPressed = true;
+      }
+    }
+    
+    // If a max-wait is configured, break out if we've exceeded that length of time
+    if ((maxWaitTime > 0) && (maxWaitTime <= (loopStartTime + millis())))
+      break;
+
+    delay(100);
+    lastButtonState = buttonState;
+  }
+
+  return result;
+}
+
 void setup() {
   Serial.begin(115200);
-  Serial.println(DebugMessages::HelloWorld);
+  //Serial.println(DebugMessages::HelloWorld);
+
+  pinMode(BUTTON_PIN, INPUT_PULLUP);  
+
+  // Alert the user that they have a chance to enter config mode
+  updateOLED2(
+    OLEDStrings::StartupConfigPromptLine1, 
+    OLEDStrings::StartupConfigPromptLine2, 
+    OLEDStrings::StartupConfigPromptLine3);
+
+  Button pushButton = GetButtonInput(BUTTON_PIN, 4000);
+  if (!pushButton.LongPressed && !pushButton.SingleClicked)
+  {
+    // User has chosen to enter configuration mode
+    updateOLED2(
+      OLEDStrings::EnteringConfigLine1,
+      OLEDStrings::EnteringConfigLine2,
+      OLEDStrings::EnteringConfigLine3
+    );
+  }
+    Serial.println("No button detected.");
 
   u8g2.begin();
   sht.init();
@@ -133,34 +216,15 @@ void setup() {
   EEPROM.begin(512);
   delay(500);
 
-  buttonConfig = String(EEPROM.read(addr)).toInt();
-  if (buttonConfig > 3) buttonConfig = 0;
+  displayModeConfig = String(EEPROM.read(addr)).toInt();
+  if (displayModeConfig > 3) displayModeConfig = 0;
 
   delay(400);
+
+  // based on the value read from EEPROM, this shows the current config on-screen and will update local global vars to match
   setConfig();
-  Serial.println("buttonConfig: " + String(buttonConfig));
-  
-  updateOLED2(
-    OLEDStrings::StartupConfigPromptLine1, 
-    OLEDStrings::StartupConfigPromptLine2, 
-    OLEDStrings::StartupConfigPromptLine3);
-  delay(2000);
+  Serial.println("displayModeConfig: " + String(displayModeConfig));
 
-  pinMode(D7, INPUT_PULLUP);
-  currentState = digitalRead(D7);
-  if (currentState == LOW)
-  {
-    updateOLED2(
-      OLEDStrings::EnteringConfigLine1,
-      OLEDStrings::EnteringConfigLine2,
-      OLEDStrings::EnteringConfigLine3
-    );
-    delay(3000);
-
-    lastState = HIGH;
-    setConfig();
-    inConf();
-  }
 
   // get file storage going
   //Start LittleFS
@@ -189,13 +253,14 @@ void setup() {
   ag.TMP_RH_Init(0x44);
 }
 
-void loop() {
+void loop() 
+{
+  Serial.println("Start of loop");
 
   //probably need a better way to check this
   if (connectWIFI){
       mqtt_connect();
     }
-
   currentMillis = millis();
   updateTVOC();
   updateOLED();
@@ -204,71 +269,82 @@ void loop() {
   updateTempHum();
   //sendToServer();
   sendToMQTTServer();
-  Serial.println(DebugMessages::HelloWorld);
 }
 
-void inConf(){
-  setConfig();
-  currentState = digitalRead(D7);
+// void inConf()
+// {
 
-  if (currentState){
-    Serial.println(DebugMessages::ConfigButtonPinHigh);
-  } else {
-    Serial.println(DebugMessages::ConfigButtonPinLow);
-  }
+//   // check if ESP8266 has interupts for noting when bits change
+//   setConfig();
+//   currentState = digitalRead(D7);
 
-  if(lastState == HIGH && currentState == LOW) {
-    pressedTime = millis();
-  }
+  
+//   // Button pushButton = GetButtonInput(BUTTON_PIN);
 
-  else if(lastState == LOW && currentState == HIGH) {
-    releasedTime = millis();
-    long pressDuration = releasedTime - pressedTime;
-    if( pressDuration < 1000 ) {
-      buttonConfig=buttonConfig+1;
-      if (buttonConfig>3) buttonConfig=0;
-    }
-  }
+//   // if (pushButton.SingleClicked) Serial.println("single cliekd!");
+//   // if (pushButton.LongPressed) Serial.println("long press!");
 
-  if (lastState == LOW && currentState == LOW){
-     long passedDuration = millis() - pressedTime;
-      if( passedDuration > 4000 ) {
-        // to do
-//        if (buttonConfig==4) {
-//          updateOLED2("Saved", "Release", "Button Now");
-//          delay(1000);
-//          updateOLED2("Starting", "CO2", "Calibration");
-//          delay(1000);
-//          Co2Calibration();
-//       } else {
-          updateOLED2(
-            OLEDStrings::ConfigSavedLine1,
-            OLEDStrings::ConfigSavedLine2,
-            OLEDStrings::ConfigSavedLine3);
-          delay(1000);
 
-          updateOLED2(
-            OLEDStrings::RebootingLine1,
-            OLEDStrings::RebootingLine2,
-            OLEDStrings::RebootingLine3);
-          delay(5000);
+//   if (currentState){
+//     Serial.println(DebugMessages::ConfigButtonPinHigh);
+//   } else {
+//     Serial.println(DebugMessages::ConfigButtonPinLow);
+//   }
 
-          EEPROM.write(addr, char(buttonConfig));
-          EEPROM.commit();
-          delay(1000);
-          ESP.restart();
- //       }
-    }
+//   if(lastState == HIGH && currentState == LOW) {
+//     pressedTime = millis();
+//   }
 
-  }
-  lastState = currentState;
-  delay(100);
-  inConf();
-}
+//   else if(lastState == LOW && currentState == HIGH) {
+//     releasedTime = millis();
+//     long pressDuration = releasedTime - pressedTime;
+//     if( pressDuration < 1000 ) {
+//       displayModeConfig=displayModeConfig+1;
+//       if (displayModeConfig>3) displayModeConfig=0;
+//     }
+//   }
+
+//   if (lastState == LOW && currentState == LOW)
+//   {
+//      long passedDuration = millis() - pressedTime;
+//       if( passedDuration > 4000 ) 
+//       {
+//         // to do
+// //        if (displayModeConfig==4) {
+// //          updateOLED2("Saved", "Release", "Button Now");
+// //          delay(1000);
+// //          updateOLED2("Starting", "CO2", "Calibration");
+// //          delay(1000);
+// //          Co2Calibration();
+// //       } else {
+//           updateOLED2(
+//             OLEDStrings::ConfigSavedLine1,
+//             OLEDStrings::ConfigSavedLine2,
+//             OLEDStrings::ConfigSavedLine3);
+//           delay(1000);
+
+//           updateOLED2(
+//             OLEDStrings::RebootingLine1,
+//             OLEDStrings::RebootingLine2,
+//             OLEDStrings::RebootingLine3);
+//           delay(5000);
+
+//           EEPROM.write(addr, char(displayModeConfig));
+//           EEPROM.commit();
+//           delay(1000);
+//           ESP.restart();
+//  //       }
+//     }
+
+//   }
+//   lastState = currentState;
+//   delay(100);
+//   inConf();
+// }
 
 // todo - config state machine for both OLED readout and reseting wifi
 void setConfig() {
-  if (buttonConfig == 0) 
+  if (displayModeConfig == 0) 
   {
     updateOLED2(
       OLEDStrings::ConfigTempC,
@@ -279,8 +355,8 @@ void setConfig() {
       inF = false;
       inUSAQI = false;
   }
-    if (buttonConfig == 1) 
-    {
+  if (displayModeConfig == 1) 
+  {
     updateOLED2(
       OLEDStrings::ConfigTempC,
       OLEDStrings::ConfigPMAQI,
@@ -289,7 +365,8 @@ void setConfig() {
       u8g2.setDisplayRotation(U8G2_R0);
       inF = false;
       inUSAQI = true;
-  } else if (buttonConfig == 2) 
+  } 
+  else if (displayModeConfig == 2) 
   {
     updateOLED2(
       OLEDStrings::ConfigTempF,
@@ -300,7 +377,8 @@ void setConfig() {
     u8g2.setDisplayRotation(U8G2_R0);
       inF = true;
       inUSAQI = false;
-  } else  if (buttonConfig == 3) {
+  } 
+  else  if (displayModeConfig == 3) {
     updateOLED2(
       OLEDStrings::ConfigTempF,
       OLEDStrings::ConfigPMAQI,
@@ -314,7 +392,7 @@ void setConfig() {
 
 
   // to do
-  // if (buttonConfig == 8) {
+  // if (displayModeConfig == 8) {
   //  updateOLED2("CO2", "Manual", "Calibration");
   // }
 }
@@ -347,7 +425,7 @@ void updateTVOC()
         error = sgp41.measureRawSignals(compensationRh, compensationT, srawVoc, srawNox);
     }
 
-    if (b - previousTVOC >= SampleInterval::TVOC) 
+    if (currentMillis - previousTVOC >= SampleInterval::TVOC) 
     {
       previousTVOC += SampleInterval::TVOC;
       airQuality.TVOC = voc_algorithm.process(srawVoc);
@@ -449,8 +527,6 @@ void updateOLED2(String ln1, String ln2, String ln3)
 
 void sendToMQTTServer() 
 {
-  Serial.println("Got into sendToMQTTServer!");
-
   char noxstr[10];
   itoa(airQuality.NOX, noxstr, 10);
 
@@ -636,14 +712,12 @@ void connectToWifi() {
 // Should be called in the loop function and it will take care if connecting.
 void mqtt_connect() 
 {
-  Serial.println("Got into mqtt_connect!");
-
   int8_t ret;
 
   // Stop if already connected.
   //if (mqtt_client.connected() == MQTT_CONNECTED) {
   if (mqtt_client.state() == MQTT_CONNECTED) {
-    Serial.println("MQTT Already connected");
+    //Serial.println("MQTT Already connected");
     return;
   }
 
@@ -673,26 +747,24 @@ void mqtt_connect()
 
 void mqtt_publish(char *sub_topic, const char *payload) 
 {
-  Serial.println("Got into mqtt_publish!");
-  
   char mqtt_topic[80];
   strcpy(mqtt_topic, mqttConfiguration.Topic);
   strcat(mqtt_topic, "/");
   strcat(mqtt_topic, sub_topic);
 
-  Serial.print("topic: ");
-  Serial.println(mqtt_topic);
-  Serial.print("subtopic: ");
-  Serial.println(sub_topic);
-  Serial.print("payload: ");
-  Serial.println(payload);
+  // Serial.print("topic: ");
+  // Serial.println(mqtt_topic);
+  // Serial.print("subtopic: ");
+  // Serial.println(sub_topic);
+  // Serial.print("payload: ");
+  // Serial.println(payload);
       
       // todo - receive value. does this denote failure?
   bool publishResult = mqtt_client.publish(mqtt_topic, payload);
 
   if (publishResult)
   {
-    Serial.println("publish succeeded");
+    //Serial.println("publish succeeded");
   }
   else
   {
