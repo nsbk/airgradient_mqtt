@@ -60,6 +60,9 @@ This implementation writes to an MQTT server of your choice.
 #include "QualitySample.h"
 #include "MQTTConfiguration.h"
 #include "Button.h"
+#include "IDisplay.h"
+#include "U8g2Display.h"
+#include "TestDI.h"
 //#include "ConfigManager.h"
 
 AirGradient ag = AirGradient();
@@ -120,8 +123,6 @@ unsigned long previousTVOC = 0;
 int displayModeConfig=0;
 int lastState = LOW;
 int currentState;
-unsigned long pressedTime  = 0;
-unsigned long releasedTime = 0;
 
 // Pin connected to AirGradient push button
 #define BUTTON_PIN D7
@@ -130,8 +131,8 @@ unsigned long releasedTime = 0;
 Button GetButtonInput(int pin, int maxWaitTime = 0)
 {
   Button result = Button();
-  unsigned long pressedTime2 = 0;
-  unsigned long releasedTime2 = 0;
+  unsigned long pressedTime = 0;
+  unsigned long releasedTime = 0;
 
   int shortpresstime = 2500;
   int longpresstime = 2500;
@@ -148,7 +149,7 @@ Button GetButtonInput(int pin, int maxWaitTime = 0)
     // Button is pressed
     if (lastButtonState == LOW && buttonState == HIGH) 
     {
-      pressedTime2 = millis();
+      pressedTime = millis();
       isPressing = true;
     }
 
@@ -156,8 +157,8 @@ Button GetButtonInput(int pin, int maxWaitTime = 0)
     else if (lastButtonState == HIGH && buttonState == LOW) 
     {
       isPressing = false;
-      releasedTime2 = millis();
-      long pressDuration = releasedTime2 - pressedTime2;
+      releasedTime = millis();
+      long pressDuration = releasedTime - pressedTime;
       if (pressDuration < shortpresstime) 
       {
         result.SingleClicked = true;
@@ -166,7 +167,7 @@ Button GetButtonInput(int pin, int maxWaitTime = 0)
 
     if (isPressing)
     {
-      long pressedDuration = millis() - pressedTime2;
+      long pressedDuration = millis() - pressedTime;
       if (pressedDuration > longpresstime) 
       {
           result.LongPressed = true;
@@ -189,6 +190,15 @@ void setup() {
   //Serial.println(DebugMessages::HelloWorld);
 
   pinMode(BUTTON_PIN, INPUT_PULLUP);  
+
+  // dependency injection test
+  Serial.println("starting display test");
+  IDisplay* display = new U8g2Display(u8g2);
+  TestDI depends = TestDI(display);
+  depends.DoTheTest();
+  Serial.println("Ending test");
+
+  delay(10000);
 
   // Alert the user that they have a chance to enter config mode
   updateOLED2(
