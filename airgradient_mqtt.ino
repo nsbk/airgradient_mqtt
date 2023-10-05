@@ -53,6 +53,8 @@ This implementation writes to an MQTT server of your choice.
 #include <SensirionI2CSgp41.h>
 #include <NOxGasIndexAlgorithm.h>
 #include <VOCGasIndexAlgorithm.h>
+
+// remove this when we're sure the libraries are all working
 #include <U8g2lib.h>
 
 #include "src/StringResources.h"
@@ -60,9 +62,7 @@ This implementation writes to an MQTT server of your choice.
 #include "src/Sampling/QualitySample.h"
 #include "src/MQTTConfiguration.h"
 #include "src/Button.h"
-//#include "src/Display/IDisplay.h"
 #include "src/Display/U8g2Display.h"
-//#include "TestDI.h"
 //#include "ConfigManager.h"
 //#include "StateMachine.h"
 //#include "ConfigStateMachine.h"
@@ -132,64 +132,6 @@ int currentState;
 // Pin connected to AirGradient push button
 #define BUTTON_PIN D7
 
-// Get button feedback for a pin. Option to set a maximum time in milliseconds to get input
-Button GetButtonInput(int pin, int maxWaitTime = 0)
-{
-    Button result = Button();
-    unsigned long pressedTime = 0;
-    unsigned long releasedTime = 0;
-
-    int shortpresstime = 2500;
-    int longpresstime = 2500;
-
-    int lastButtonState = LOW;
-    bool isPressing = false;
-
-    int loopStartTime = millis();
-    while (!result.SingleClicked && !result.LongPressed)
-    {
-        // Pull-up resistor means a press will read as LOW - toggle to make it more intuitive
-        int buttonState = !digitalRead(pin);
-
-        // Button is pressed
-        if (lastButtonState == LOW && buttonState == HIGH)
-        {
-            pressedTime = millis();
-            isPressing = true;
-        }
-
-        // Button is released - could be a single click
-        else if (lastButtonState == HIGH && buttonState == LOW)
-        {
-            isPressing = false;
-            releasedTime = millis();
-            long pressDuration = releasedTime - pressedTime;
-            if (pressDuration < shortpresstime)
-            {
-                result.SingleClicked = true;
-            }
-        }
-
-        if (isPressing)
-        {
-            long pressedDuration = millis() - pressedTime;
-            if (pressedDuration > longpresstime)
-            {
-                result.LongPressed = true;
-            }
-        }
-
-        // If a max-wait is configured, break out if we've exceeded that length of time
-        if ((maxWaitTime > 0) && (maxWaitTime <= (loopStartTime + millis())))
-            break;
-
-        delay(100);
-        lastButtonState = buttonState;
-    }
-
-    return result;
-}
-
 void setup()
 {
     Serial.begin(115200);
@@ -213,7 +155,7 @@ void setup()
         OLEDStrings::StartupConfigPromptLine2,
         OLEDStrings::StartupConfigPromptLine3);
 
-    Button pushButton = GetButtonInput(BUTTON_PIN, 4000);
+    Button pushButton = Button::GetButtonInput(BUTTON_PIN, 4000);
     if (!pushButton.LongPressed && !pushButton.SingleClicked)
     {
         // User has chosen to enter configuration mode

@@ -5,39 +5,49 @@
 #include "StateBase.h"
 #include "../Display/IDisplay.h"
 
-class ConfigStateMachine : MachineBase
+class ConfigStateMachine : public MachineBase
 {
     public:
         ConfigStateMachine(IDisplay* display);
+        void Run() override;
+
+
+        // here or the base class - it should be possible to see the current state of the machine and to set it at the machine level, not the state level
+
+    //     inline ConfigMode* getCurrentState() const { return currentState; }
+	// // In here, we'll delegate the state transition to the currentState
+	// void toggle();
+	// // This will get called by the current state
+	// void setState(ConfigMode& newState);
 
     private:
         IDisplay* display;
 
 };
 
-class SelectState : StateBase
+class SelectState : public StateBase
 {
     // can this be a configstatemachine or does it have to be statemachine
     void ShortPress(MachineBase &machine) override;
-    //void LongPress(ConfigStateMachine &machine) override;
+    void LongPress(MachineBase &machine) override;
 };
 
-// class EditConfigState : StateBase
-// {
-//     void ShortPress(ConfigStateMachine &machine) override;
-//     void LongPress(ConfigStateMachine &machine) override;
-// };
+class EditConfigState : public StateBase
+{
+    void ShortPress(MachineBase &machine) override;
+    void LongPress(MachineBase &machine) override;
+};
 
-// class ClearState : StateBase
-// {
-//     void ShortPress(ConfigStateMachine &machine) override;
-//     void LongPress(ConfigStateMachine &machine) override;
-// };
+class ClearState : public StateBase
+{
+    void ShortPress(MachineBase &machine) override;
+    void LongPress(MachineBase &machine) override;
+};
 
-// class RebootState : StateBase
-// {
-//     void ShortPress(ConfigStateMachine &machine) override;
-//     void LongPress(ConfigStateMachine &machine) override;
-// };
+class RebootState : public StateBase
+{
+    void ShortPress(MachineBase &machine) override;
+    void LongPress(MachineBase &machine) override;
+};
 
 #endif

@@ -9,8 +9,9 @@ class MachineBase
     friend class StateBase;
     
     public:
+        virtual void Run() = 0;
         ~MachineBase();
-
+        
     protected:
         StateBase *state;
 };
