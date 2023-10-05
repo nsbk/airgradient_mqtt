@@ -11,6 +11,7 @@ class U8g2Display : public IDisplay
         U8G2 u8g2;
 
     public:
+        // Update text on the display
         void WriteLines(String line1, String line2, String line3) override;
 
         U8g2Display(U8G2 display);

@@ -3,10 +3,10 @@
 #include "IDisplay.h"
 #include "U8g2Display.h"
 
+// Update text on the display
 void U8g2Display::WriteLines(String line1, String line2, String line3)
 {
     //char buf[9];
-    //u8g2.firstPage();
     u8g2.firstPage();
     do 
     {
