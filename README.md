@@ -92,3 +92,13 @@ mqtt:
 1. point the publisher or subscriber to the broker. has to be able to call mqtt:// instead of http:// and access the port
 1. add sensors to the yaml in home assistant to receive the data based on the topic
 1. update the UI to show those sensors
+
+
+### testing
+install the AUnit library with ArduinoIDE
+
+ubuntu system - may be good to go
+
+wel - install g++ and make
+
+clone EpoxyDuino
