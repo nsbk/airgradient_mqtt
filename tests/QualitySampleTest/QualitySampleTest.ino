@@ -12,6 +12,24 @@ test(SamplingTest, GetAQI_Valid)
 
     airQuality.PM25 = 12;
     assertEqual(airQuality.GetAQI(), 50);
+
+    airQuality.PM25 = 35.4;
+    assertNear(airQuality.GetAQI(), 100, 1);
+
+    airQuality.PM25 = 55.4;
+    assertNear(airQuality.GetAQI(), 150, 1);
+
+    airQuality.PM25 = 150.4;
+    assertNear(airQuality.GetAQI(), 200, 1);
+
+    airQuality.PM25 = 250.4;
+    assertNear(airQuality.GetAQI(), 300, 1);
+
+    airQuality.PM25 = 350.4;
+    assertNear(airQuality.GetAQI(), 400, 1);
+
+    airQuality.PM25 = 500.4;
+    assertNear(airQuality.GetAQI(), 500, 1);
 }
 
 void setup()

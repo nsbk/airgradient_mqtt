@@ -102,3 +102,5 @@ ubuntu system - may be good to go
 wel - install g++ and make
 
 clone EpoxyDuino
+
+all files in src because that's where arduino recursively searches and compiles
