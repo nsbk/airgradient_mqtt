@@ -4,5 +4,7 @@
 include ../../.env
 
 APP_NAME := QualitySampleTest
-ARDUINO_LIBS := QualitySample AUnit
+ARDUINO_LIBS := AUnit QualitySample
+ARDUINO_LIB_DIRS := \
+	../../src/Sampling
 include $(arduino_ide_dir)/libraries/EpoxyDuino/EpoxyDuino.mk
