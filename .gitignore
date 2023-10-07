@@ -31,16 +31,5 @@
 *.out
 *.app
 
-# Root directory of EpoxyFS
-epoxyfsdata
-
-# Root file of EpoxyEeromAvr and EpoxyEeromEsp
-epoxyeepromdata
-
-# Other folders and files that support EpoxyDuino
-EpoxyDuino/
-AUnit/
-EpoxyDuino.h
-EpoxyDuino.mk
-library.json
-UnixHostDuino.mk
+# Environment Files
+*.env

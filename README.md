@@ -93,8 +93,8 @@ mqtt:
 1. add sensors to the yaml in home assistant to receive the data based on the topic
 1. update the UI to show those sensors
 
-
 ### testing
+
 install the AUnit library with ArduinoIDE
 
 ubuntu system - may be good to go
@@ -104,3 +104,20 @@ wel - install g++ and make
 clone EpoxyDuino
 
 all files in src because that's where arduino recursively searches and compiles
+
+will need to add a `.env` file to root with the following format:
+
+```bash
+arduino_ide_dir=LOCATION_OF_ARDUINO_IDE
+```
+
+it is expected that EpoxyDuino will be cloned to the libraries subfolder.
+
+To compile and run tests:
+
+```bash
+$ make -C tests clean
+
+$ make -C tests tests
+$ make -C tests runtests | grep failed
+```
