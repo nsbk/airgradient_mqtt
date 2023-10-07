@@ -38,8 +38,8 @@ epoxyfsdata
 epoxyeepromdata
 
 # Other folders and files that support EpoxyDuino
-cores/
-libraries/
+EpoxyDuino/
+AUnit/
 EpoxyDuino.h
 EpoxyDuino.mk
 library.json

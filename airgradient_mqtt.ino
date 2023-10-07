@@ -59,7 +59,7 @@ This implementation writes to an MQTT server of your choice.
 
 #include "src/StringResources.h"
 #include "src/Sampling/SampleInterval.h"
-#include "src/Sampling/QualitySample.h"
+#include "libraries/QualitySample/src/QualitySample.h"
 #include "src/MQTTConfiguration.h"
 #include "src/Button.h"
 #include "src/Display/U8g2Display.h"
