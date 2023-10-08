@@ -3,8 +3,7 @@
 #include <Arduino.h>
 #include <AUnit.h>
 #include <WString.h>
-//#include <QualitySample.h>
-#include "../../src/Sampling/QualitySample.h"
+#include <QualitySample.h>
 
 using aunit::TestRunner;
 
