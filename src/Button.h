@@ -1,7 +1,7 @@
 #ifndef Button_h
 #define Button_h
 
-#include "arduino.h"
+#include "Arduino.h"
 
 struct Button
 {

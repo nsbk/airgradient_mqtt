@@ -58,8 +58,9 @@ This implementation writes to an MQTT server of your choice.
 #include <U8g2lib.h>
 
 #include "src/StringResources.h"
-#include "src/Sampling/SampleInterval.h"
-#include "src/Sampling/QualitySample.h"
+//#include "src/Sampling/SampleInterval.h"
+//#include "src/Sampling/QualitySample.h"
+#include "src/Sampling/Sampling.h"
 #include "src/MQTTConfiguration.h"
 #include "src/Button.h"
 #include "src/Display/U8g2Display.h"
