@@ -3,7 +3,9 @@
 
 #include "MachineBase.h"
 #include "StateBase.h"
-#include "../Display/IDisplay.h"
+#include "../Display/Display.h"
+
+using namespace Display;
 
 class ConfigStateMachine : public MachineBase
 {

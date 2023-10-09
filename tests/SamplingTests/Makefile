@@ -3,7 +3,7 @@
 
 include ../../.env
 
-APP_NAME := QualitySampleTest
+APP_NAME := SamplingTests
 ARDUINO_LIBS := AUnit Sampling
 ARDUINO_LIB_DIRS := \
 	../../src

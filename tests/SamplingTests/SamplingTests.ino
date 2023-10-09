@@ -1,4 +1,4 @@
-#line 2 "QualitySampleTest.ino"
+#line 2 "SamplingTests.ino"
 
 #include <Arduino.h>
 #include <AUnit.h>
@@ -8,7 +8,7 @@
 using aunit::TestRunner;
 using namespace Sampling;
 
-test(SamplingTest, GetAQI)
+test(SamplingTests, GetAQI)
 {
     QualitySample airQuality = QualitySample();
 
@@ -53,7 +53,7 @@ test(SamplingTest, GetAQI)
     assertEqual(500, airQuality.GetAQI());
 }
 
-test(SamplingTest, TempFConversion)
+test(SamplingTests, TempFConversion)
 {
     // AUnit struggles with floats. Convert to string to get around the issue.
     QualitySample airQuality = QualitySample();

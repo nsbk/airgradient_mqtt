@@ -4,6 +4,8 @@
 // Pin connected to AirGradient push button
 #define BUTTON_PIN D7
 
+using namespace Display;
+
 ConfigStateMachine::ConfigStateMachine(IDisplay* display)
 {
     this->display = display;

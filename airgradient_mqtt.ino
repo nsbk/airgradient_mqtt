@@ -63,12 +63,13 @@ This implementation writes to an MQTT server of your choice.
 #include "src/Sampling/Sampling.h"
 #include "src/MQTTConfiguration.h"
 #include "src/Button.h"
-#include "src/Display/U8g2Display.h"
+#include "src/Display/Display.h"
 //#include "ConfigManager.h"
 //#include "StateMachine.h"
 //#include "ConfigStateMachine.h"
 
 using namespace Sampling;
+using namespace Display;
 
 AirGradient ag = AirGradient();
 SensirionI2CSgp41 sgp41;

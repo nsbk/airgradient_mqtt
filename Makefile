@@ -1,8 +1,8 @@
 all:
-	$(MAKE) -C tests arduino_ide_dir=$(arduino_ide_dir)
+	$(MAKE) -C tests
 
 runtests:
-	$(MAKE) -C tests runtests arduino_ide_dir=$(arduino_ide_dir)
+	$(MAKE) -C tests runtests
 
 clean:
-	$(MAKE) -C tests clean arduino_ide_dir=$(arduino_ide_dir)
+	$(MAKE) -C tests clean
