@@ -6,6 +6,7 @@
 #include <Sampling.h>
 
 using aunit::TestRunner;
+using namespace Sampling;
 
 test(SamplingTest, GetAQI)
 {

@@ -68,6 +68,8 @@ This implementation writes to an MQTT server of your choice.
 //#include "StateMachine.h"
 //#include "ConfigStateMachine.h"
 
+using namespace Sampling;
+
 AirGradient ag = AirGradient();
 SensirionI2CSgp41 sgp41;
 VOCGasIndexAlgorithm voc_algorithm;
