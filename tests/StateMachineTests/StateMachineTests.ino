@@ -6,15 +6,23 @@
 #include "MockDisplay.h"
 
 using aunit::TestRunner;
-// namespace not implemented yet
+// TODO namespace not implemented yet
 //using namespace StateMachine;
 
-test(U8g2DisplayTests, Constructor)
+test(StateMachineTests, Constructor)
 {
     IDisplay *mockDisplay = new MockDisplay();
     MachineBase *testMachine = new ConfigStateMachine(mockDisplay);
 
     assertNotEqual(nullptr, testMachine);
+
+    // ConfigStateMachines should begin with the SelectState.
+    bool correctInitialState = false;
+    if (dynamic_cast<SelectState*>(testMachine->state) != nullptr)
+    {
+        correctInitialState = true;
+    }
+    assertTrue(correctInitialState);
 }
 
 void setup()

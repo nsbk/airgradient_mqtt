@@ -12,7 +12,7 @@ class MachineBase
         virtual void Run() = 0;
         ~MachineBase();
         
-    protected:
+    //protected:
         StateBase *state;
 };
 
