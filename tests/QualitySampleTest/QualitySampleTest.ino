@@ -13,35 +13,43 @@ test(SamplingTest, GetAQI)
 
     // None
     airQuality.PM25 = 0.0;
-    assertEqual(airQuality.GetAQI(), 0);
+    assertEqual(0, airQuality.GetAQI());
 
-    // Good
+    airQuality.PM25 = 11;
+    assertEqual(46, airQuality.GetAQI());
+
     airQuality.PM25 = 12.0;
-    assertEqual(airQuality.GetAQI(), 50);
+    assertEqual(50, airQuality.GetAQI());
 
-    // Moderate
+    airQuality.PM25 = 33.2;
+    assertEqual(95, airQuality.GetAQI());
+
     airQuality.PM25 = 35.4;
-    assertEqual(airQuality.GetAQI(), 100);
+    assertEqual(100, airQuality.GetAQI());
 
-    // Unhealthy for Sensitive Groups
+    airQuality.PM25 = 47;
+    assertEqual(129, airQuality.GetAQI());
+
     airQuality.PM25 = 55.4;
-    assertNear(airQuality.GetAQI(), 150, 1);
+    assertEqual(150, airQuality.GetAQI());
 
-    // Unhealthy
+    airQuality.PM25 = 127.3;
+    assertEqual(188, airQuality.GetAQI());
+
     airQuality.PM25 = 150.4;
-    assertNear(airQuality.GetAQI(), 200, 1);
+    assertEqual(200, airQuality.GetAQI());
 
-    // Very Unhealthy
+    airQuality.PM25 = 240;
+    assertEqual(290, airQuality.GetAQI());
+
     airQuality.PM25 = 250.4;
-    assertNear(airQuality.GetAQI(), 300, 1);
+    assertEqual(300, airQuality.GetAQI());
 
-    // Hazardous 
     airQuality.PM25 = 350.4;
-    assertNear(airQuality.GetAQI(), 400, 1);
+    assertEqual(400, airQuality.GetAQI());
 
-    // Hazardous 
     airQuality.PM25 = 500.4;
-    assertNear(airQuality.GetAQI(), 500, 1);
+    assertEqual(500, airQuality.GetAQI());
 }
 
 test(SamplingTest, TempFConversion)
@@ -50,22 +58,21 @@ test(SamplingTest, TempFConversion)
     QualitySample airQuality = QualitySample();
     String resultString;
 
-
     airQuality.TemperatureC = -40;
     resultString = String(airQuality.TemperatureF());
-    assertEqual(resultString, "-40.00");
+    assertEqual("-40.00", resultString);
 
     airQuality.TemperatureC = 0;
     resultString = String(airQuality.TemperatureF());
-    assertEqual(resultString, "32.00");
+    assertEqual("32.00", resultString);
 
     airQuality.TemperatureC = 37;
     resultString = String(airQuality.TemperatureF());
-    assertEqual(resultString, "98.60");
+    assertEqual("98.60", resultString);
 
     airQuality.TemperatureC = 100;
     resultString = String(airQuality.TemperatureF());
-    assertEqual(resultString, "212.00");
+    assertEqual("212.00", resultString);
 }
 
 void setup()

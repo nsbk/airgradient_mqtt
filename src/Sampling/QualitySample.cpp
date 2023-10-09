@@ -31,29 +31,32 @@ int QualitySample::GetAQI()
         BPLo = the concentration breakpoint less than or equal to Cp
         IHi = the AQI value corresponding to BPHi
         ILo = the AQI value corresponding to BPLo
+
+        
+        Casting from float rounds down. Adding 0.5 to ILo helps the cast to round in an expected manner.
     */
 
+    // None
+    if (PM25 < 12.0) 
+        return ((50 - 0) / (12.0 - .0) * (PM25 - .0) + 0.5);
     // Good
-    if (PM25 <= 12.0) 
-        return ((50 - 0) / (12.0 - .0) * (PM25 - .0) + 0);
+    else if (PM25 < 35.4) 
+        return ((100 - 50) / (35.4 - 12.0) * (PM25 - 12.0) + 50.5);
     // Moderate
-    else if (PM25 <= 35.4) 
-        return ((100 - 50) / (35.4 - 12.0) * (PM25 - 12.0) + 50);
+    else if (PM25 < 55.4) 
+        return ((150 - 100) / (55.4 - 35.4) * (PM25 - 35.4) + 100.5);
     // Unhealthy for Sensitive Groups
-    else if (PM25 <= 55.4) 
-        return ((150 - 100) / (55.4 - 35.4) * (PM25 - 35.4) + 100);
+    else if (PM25 < 150.4) 
+        return ((200 - 150) / (150.4 - 55.4) * (PM25 - 55.4) + 150.5);
     // Unhealthy
-    else if (PM25 <= 150.4) 
-        return ((200 - 150) / (150.4 - 55.4) * (PM25 - 55.4) + 150);
-    // Very Unhealthy
-    else if (PM25 <= 250.4) 
-        return ((300 - 200) / (250.4 - 150.4) * (PM25 - 150.4) + 200);
-    // Hazardous  
-    else if (PM25 <= 350.4) 
-        return ((400 - 300) / (350.4 - 250.4) * (PM25 - 250.4) + 300);
+    else if (PM25 < 250.4) 
+        return ((300 - 200) / (250.4 - 150.4) * (PM25 - 150.4) + 200.5);
+    // Very Unhealthy  
+    else if (PM25 < 350.4) 
+        return ((400 - 300) / (350.4 - 250.4) * (PM25 - 250.4) + 300.5);
     // Hazardous
     else if (PM25 <= 500.4) 
-        return ((500 - 400) / (500.4 - 350.4) * (PM25 - 350.4) + 400);
+        return ((500 - 400) / (500.4 - 350.4) * (PM25 - 350.4) + 400.5);
     else 
         return 500;
 }
