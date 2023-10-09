@@ -3,9 +3,8 @@
 
 include ../../.env
 
-APP_NAME := DisplayTests
-ARDUINO_LIBS := AUnit U8g2 Display Monochrome
+APP_NAME := StateMachineTests
+ARDUINO_LIBS := AUnit StateMachine Display
 ARDUINO_LIB_DIRS := \
-	../../src \
-	../../src/Display
+	../../src
 include $(arduino_ide_dir)/libraries/EpoxyDuino/EpoxyDuino.mk

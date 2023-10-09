@@ -1,12 +1,11 @@
 #include <U8g2lib.h>
 #include <WString.h>
-#include "IDisplay.h"
-#include "U8g2Display.h"
+#include "U8G2Display.h"
 
-namespace Display
+namespace Display::Monochrome
 {
     // Update text on the display. Returns 0 once drawing is complete.
-    int U8g2Display::WriteLines(String line1, String line2, String line3)
+    int U8G2Display::WriteLines(String line1, String line2, String line3)
     {
         int result = 0;
 
@@ -24,7 +23,7 @@ namespace Display
         return result;
     }
 
-    U8g2Display::U8g2Display(U8G2 display)
+    U8G2Display::U8G2Display(U8G2 display)
     {
         this->u8g2 = display;
         u8g2.begin();

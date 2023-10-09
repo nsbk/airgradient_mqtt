@@ -3,11 +3,11 @@
 
 #include <U8g2lib.h>
 #include <WString.h>
-#include "IDisplay.h"
+#include "../IDisplay.h"
 
-namespace Display
+namespace Display::Monochrome
 {
-    class U8g2Display : public IDisplay
+    class U8G2Display : public IDisplay
     {
         private: 
             U8G2 u8g2;
@@ -16,7 +16,7 @@ namespace Display
             // Update text on the display
             int WriteLines(String line1, String line2, String line3) override;
 
-            U8g2Display(U8G2 display);
+            U8G2Display(U8G2 display);
     };
 }
 

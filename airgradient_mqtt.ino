@@ -64,12 +64,14 @@ This implementation writes to an MQTT server of your choice.
 #include "src/MQTTConfiguration.h"
 #include "src/Button.h"
 #include "src/Display/Display.h"
+#include "src/Display/Monochrome/U8G2Display.h"
 //#include "ConfigManager.h"
 //#include "StateMachine.h"
 //#include "ConfigStateMachine.h"
 
 using namespace Sampling;
 using namespace Display;
+using namespace Display::Monochrome;
 
 AirGradient ag = AirGradient();
 SensirionI2CSgp41 sgp41;
@@ -144,7 +146,7 @@ void setup()
     pinMode(BUTTON_PIN, INPUT_PULLUP);
 
     // dependency injection test
-    IDisplay *display = new U8g2Display(u8g2);
+    IDisplay *display = new U8G2Display(u8g2);
 
 
 
