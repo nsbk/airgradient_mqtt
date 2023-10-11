@@ -21,7 +21,7 @@ namespace Input
         int lastButtonState = LOW;
         bool isPressing = false;
 
-        int loopStartTime = millis();
+        int loopStartTime = getCurrentMillis();
         while (!this->SingleClicked && !this->LongPressed)
         {
             // Pull-up resistor means a press will read as LOW - toggle to make it more intuitive
@@ -30,7 +30,7 @@ namespace Input
             // Button is pressed
             if (lastButtonState == LOW && buttonState == HIGH)
             {
-                pressedTime = millis();
+                pressedTime = getCurrentMillis();
                 isPressing = true;
             }
 
@@ -38,7 +38,7 @@ namespace Input
             else if (lastButtonState == HIGH && buttonState == LOW)
             {
                 isPressing = false;
-                releasedTime = millis();
+                releasedTime = getCurrentMillis();
                 long pressDuration = releasedTime - pressedTime;
                 if (pressDuration < shortpresstime)
                 {
@@ -48,7 +48,7 @@ namespace Input
 
             if (isPressing)
             {
-                long pressedDuration = millis() - pressedTime;
+                long pressedDuration = getCurrentMillis() - pressedTime;
                 if (pressedDuration > longpresstime)
                 {
                     this->LongPressed = true;
@@ -56,7 +56,7 @@ namespace Input
             }
 
             // If a max-wait is configured, break out if we've exceeded that length of time
-            if ((timeout > 0) && (timeout <= (loopStartTime + millis())))
+            if ((timeout > 0) && (timeout <= (loopStartTime + getCurrentMillis())))
                 break;
 
             delay(100);

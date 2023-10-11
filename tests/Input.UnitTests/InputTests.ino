@@ -4,7 +4,6 @@
 #include <AUnit.h>
 #include <AUnitVerbose.h>
 #include <Input.h>
-#include "TimeControlButton.h"
 
 using aunit::TestRunner;
 using aunit::Verbosity;
@@ -15,16 +14,21 @@ using namespace Input;
 
 test(ButtonTests, Constructor)
 {
-    IButton *testButton = new TimeControlButton(BUTTON_PIN);
+    IButton *testButton = new Button(BUTTON_PIN);
 
     assertNotEqual(nullptr, testButton);
 }
 
-test(ButtonTests, ShortPress)
+test(ButtonTests, Reset)
 {
-    TimeControlButton *testButton = new TimeControlButton(BUTTON_PIN);
+    IButton *testButton = new Button(BUTTON_PIN);
 
-    testButton->setCurrentMillis = 0;
+    testButton->SingleClicked = true;
+    testButton->LongPressed = true;
+    testButton->Reset();
+
+    assertFalse(testButton->SingleClicked);
+    assertFalse(testButton->LongPressed);
 }
 
 void setup()

@@ -2,6 +2,7 @@
 #define Button_h
 
 #include "IButton.h"
+#include "Arduino.h"
 
 namespace Input
 {
@@ -18,6 +19,10 @@ namespace Input
 
             // Reset button status
             void Reset() override;
+
+        // Wrapper around hardware millis() call to enable mocking
+        protected:
+            virtual unsigned long getCurrentMillis() const { return ::millis(); }
     };
 }
 #endif
