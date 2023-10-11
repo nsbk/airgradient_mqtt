@@ -62,7 +62,7 @@ This implementation writes to an MQTT server of your choice.
 //#include "src/Sampling/QualitySample.h"
 #include "src/Sampling/Sampling.h"
 #include "src/MQTTConfiguration.h"
-#include "src/Input/Button.h"
+#include "src/Input/Input.h"
 #include "src/Display/Display.h"
 #include "src/Display/Monochrome/U8G2Display.h"
 //#include "ConfigManager.h"
@@ -89,6 +89,9 @@ byte value;
 
 // This interface provides communication with external displays.
 IDisplay *display;
+
+// This interface handles button input
+IButton *pushButton;
 
 // Display bottom right
 U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/U8X8_PIN_NONE);
@@ -144,11 +147,11 @@ void setup()
     Serial.begin(115200);
     //Serial.println(DebugMessages::HelloWorld);
 
-    pinMode(BUTTON_PIN, INPUT_PULLUP);
+    //pinMode(BUTTON_PIN, INPUT_PULLUP);
 
     // dependency injection test
     IDisplay *display = new U8G2Display(u8g2);
-
+    IButton *pushButton = new Button(BUTTON_PIN);
 
 
     // TestDI depends = TestDI(display);
@@ -162,9 +165,9 @@ void setup()
         OLEDStrings::StartupConfigPromptLine2,
         OLEDStrings::StartupConfigPromptLine3);
 
-    Button pushButton = Button(BUTTON_PIN);
-    pushButton.UpdateButtonInput(4000);
-    if (!pushButton.LongPressed && !pushButton.SingleClicked)
+    //Button pushButton = Button(BUTTON_PIN);
+    pushButton->UpdateButtonInput(4000);
+    if (!pushButton->LongPressed && !pushButton->SingleClicked)
     {
         // User has chosen to enter configuration mode
         updateOLED2(

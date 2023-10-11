@@ -1,3 +1,4 @@
+#include "Arduino.h"
 #include "Button.h"
 
 namespace Input
@@ -5,6 +6,7 @@ namespace Input
     Button::Button(int pin)
     {
         this->buttonPin = pin;
+        pinMode(pin, INPUT_PULLUP);
     }
 
     // Get button feedback for the pin. Option to set a maximum time in milliseconds to get input

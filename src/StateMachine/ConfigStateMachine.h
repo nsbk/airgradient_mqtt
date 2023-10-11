@@ -4,13 +4,15 @@
 #include "MachineBase.h"
 #include "StateBase.h"
 #include "../Display/Display.h"
+#include "../Input/Input.h"
 
 using namespace Display;
+using namespace Input;
 
 class ConfigStateMachine : public MachineBase
 {
     public:
-        ConfigStateMachine(IDisplay* display);
+        ConfigStateMachine(IDisplay* display, IButton* button);
         void Run() override;
 
 
@@ -24,6 +26,7 @@ class ConfigStateMachine : public MachineBase
 
     private:
         IDisplay* display;
+        IButton* button;
 
 };
 

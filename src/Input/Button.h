@@ -1,7 +1,6 @@
 #ifndef Button_h
 #define Button_h
 
-#include "Arduino.h"
 #include "IButton.h"
 
 namespace Input
@@ -15,7 +14,7 @@ namespace Input
             Button(int pin);
 
             // Get button feedback for the pin. Option to set a maximum time in milliseconds to get input
-            void UpdateButtonInput(int timeout);
+            void UpdateButtonInput(int timeout) override;
     };
 }
 #endif
