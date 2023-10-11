@@ -62,7 +62,7 @@ This implementation writes to an MQTT server of your choice.
 //#include "src/Sampling/QualitySample.h"
 #include "src/Sampling/Sampling.h"
 #include "src/MQTTConfiguration.h"
-#include "src/Button.h"
+#include "src/Input/Button.h"
 #include "src/Display/Display.h"
 #include "src/Display/Monochrome/U8G2Display.h"
 //#include "ConfigManager.h"
@@ -72,6 +72,7 @@ This implementation writes to an MQTT server of your choice.
 using namespace Sampling;
 using namespace Display;
 using namespace Display::Monochrome;
+using namespace Input;
 
 AirGradient ag = AirGradient();
 SensirionI2CSgp41 sgp41;
@@ -161,7 +162,8 @@ void setup()
         OLEDStrings::StartupConfigPromptLine2,
         OLEDStrings::StartupConfigPromptLine3);
 
-    Button pushButton = Button::GetButtonInput(BUTTON_PIN, 4000);
+    Button pushButton = Button(BUTTON_PIN);
+    pushButton.UpdateButtonInput(4000);
     if (!pushButton.LongPressed && !pushButton.SingleClicked)
     {
         // User has chosen to enter configuration mode

@@ -1,17 +1,15 @@
-#ifndef Button_h
-#define Button_h
+#include "Button.h"
 
-#include "Arduino.h"
-
-struct Button
+namespace Input
 {
-    bool SingleClicked;
-    bool LongPressed;
-
-    // Get button feedback for a pin. Option to set a maximum time in milliseconds to get input
-    static Button GetButtonInput(int pin, int timeout = 0)
+    Button::Button(int pin)
     {
-        Button result = Button();
+        this->buttonPin = pin;
+    }
+
+    // Get button feedback for the pin. Option to set a maximum time in milliseconds to get input
+    void Button::UpdateButtonInput(int timeout = 0)
+    {
         unsigned long pressedTime = 0;
         unsigned long releasedTime = 0;
 
@@ -22,10 +20,10 @@ struct Button
         bool isPressing = false;
 
         int loopStartTime = millis();
-        while (!result.SingleClicked && !result.LongPressed)
+        while (!this->SingleClicked && !this->LongPressed)
         {
             // Pull-up resistor means a press will read as LOW - toggle to make it more intuitive
-            int buttonState = !digitalRead(pin);
+            int buttonState = !digitalRead(buttonPin);
 
             // Button is pressed
             if (lastButtonState == LOW && buttonState == HIGH)
@@ -42,7 +40,7 @@ struct Button
                 long pressDuration = releasedTime - pressedTime;
                 if (pressDuration < shortpresstime)
                 {
-                    result.SingleClicked = true;
+                    this->SingleClicked = true;
                 }
             }
 
@@ -51,7 +49,7 @@ struct Button
                 long pressedDuration = millis() - pressedTime;
                 if (pressedDuration > longpresstime)
                 {
-                    result.LongPressed = true;
+                    this->LongPressed = true;
                 }
             }
 
@@ -62,9 +60,8 @@ struct Button
             delay(100);
             lastButtonState = buttonState;
         }
-
-        return result;
     }
-};
+}
 
-#endif
+
+

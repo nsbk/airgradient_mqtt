@@ -1,10 +1,11 @@
 #include "ConfigStateMachine.h"
-#include "../Button.h"
+#include "../Input/Button.h"
 
 // Pin connected to AirGradient push button
 #define BUTTON_PIN D7
 
 using namespace Display;
+using namespace Input;
 
 ConfigStateMachine::ConfigStateMachine(IDisplay* display)
 {
@@ -19,7 +20,8 @@ void ConfigStateMachine::Run()
     // 1. Take inputs
 
     // idea - could the length of this timeout be based around the current state? no timeout for some states...
-    Button pushButton = Button::GetButtonInput(BUTTON_PIN, 4000);
+    Button pushButton = Button(BUTTON_PIN);
+    pushButton.UpdateButtonInput(4000);
 
     // 2. Pass inputs to State
     if (pushButton.LongPressed)
