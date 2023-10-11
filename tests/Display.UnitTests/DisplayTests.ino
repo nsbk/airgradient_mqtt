@@ -7,6 +7,7 @@
 #include <U8G2Display.h>
 
 using aunit::TestRunner;
+using aunit::Verbosity;
 using namespace Display;
 using namespace Display::Monochrome;
 
@@ -40,6 +41,8 @@ void setup()
 #endif
     SERIAL_PORT_MONITOR.begin(115200);
     while (!SERIAL_PORT_MONITOR); // needed for Leonardo/Micro
+
+    TestRunner::setVerbosity(Verbosity::kAll);
 }
 
 void loop()

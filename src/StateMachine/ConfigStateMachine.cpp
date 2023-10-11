@@ -26,10 +26,12 @@ void ConfigStateMachine::Run()
     if (button->LongPressed)
     {
         state->LongPress(*this);
+        button->Reset();
     }
     else if (button->SingleClicked)
     {
         state->ShortPress(*this);
+        button->Reset();
     }
 
 
