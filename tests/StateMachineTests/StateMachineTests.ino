@@ -4,6 +4,7 @@
 #include <AUnit.h>
 #include <StateMachine.h>
 #include "MockDisplay.h"
+#include "MockButton.h"
 
 using aunit::TestRunner;
 // TODO namespace not implemented yet
@@ -12,7 +13,8 @@ using aunit::TestRunner;
 test(StateMachineTests, Constructor)
 {
     IDisplay *mockDisplay = new MockDisplay();
-    MachineBase *testMachine = new ConfigStateMachine(mockDisplay);
+    IButton *mockButton = new MockButton();
+    MachineBase *testMachine = new ConfigStateMachine(mockDisplay, mockButton);
 
     assertNotEqual(nullptr, testMachine);
 

@@ -63,6 +63,13 @@ namespace Input
             lastButtonState = buttonState;
         }
     }
+
+    // Reset button status
+    void Button::Reset()
+    {
+        this->SingleClicked = false;
+        this->LongPressed = false;
+    }
 }
 
 

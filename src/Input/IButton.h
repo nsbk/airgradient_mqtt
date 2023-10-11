@@ -11,6 +11,7 @@ namespace Input
             bool LongPressed;
 
             virtual void UpdateButtonInput(int timeout) = 0;
+            virtual void Reset() = 0;
     };
 }
 
