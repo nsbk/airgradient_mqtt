@@ -22,7 +22,7 @@ test(StateMachineTests, Constructor_and_Main_State_Transitions)
 
     // ConfigStateMachines should begin with the SelectState.
     bool correctInitialState = false;
-    if (dynamic_cast<SelectState*>(testMachine->state) != nullptr)
+    if (dynamic_cast<SelectState*>(testMachine->GetState()) != nullptr)
     {
         correctInitialState = true;
     }
@@ -31,32 +31,32 @@ test(StateMachineTests, Constructor_and_Main_State_Transitions)
     // todo - for future readability, break these out into separate tests that leverage a test fixture and each configure the previous, expected state
     //https://github.com/bxparks/AUnit/tree/develop#test-fixtures
     bool enteredEditConfigState = false;
-    testMachine->state->ShortPress(*testMachine);
-    if (dynamic_cast<EditConfigState*>(testMachine->state) != nullptr)
+    testMachine->GetState()->ShortPress(testMachine);
+    if (dynamic_cast<EditConfigState*>(testMachine->GetState()) != nullptr)
     {
         enteredEditConfigState = true;
     }
     assertTrue(enteredEditConfigState);
 
     bool enteredClearState = false;
-    testMachine->state->ShortPress(*testMachine);
-    if (dynamic_cast<ClearState*>(testMachine->state) != nullptr)
+    testMachine->GetState()->ShortPress(testMachine);
+    if (dynamic_cast<ClearState*>(testMachine->GetState()) != nullptr)
     {
         enteredClearState = true;
     }
     assertTrue(enteredClearState);
 
     bool enteredRebootState = false;
-    testMachine->state->ShortPress(*testMachine);
-    if (dynamic_cast<RebootState*>(testMachine->state) != nullptr)
+    testMachine->GetState()->ShortPress(testMachine);
+    if (dynamic_cast<RebootState*>(testMachine->GetState()) != nullptr)
     {
         enteredRebootState = true;
     }
     assertTrue(enteredRebootState);
 
     bool loopedBackToEditState = false;
-    testMachine->state->ShortPress(*testMachine);
-    if (dynamic_cast<EditConfigState*>(testMachine->state) != nullptr)
+    testMachine->GetState()->ShortPress(testMachine);
+    if (dynamic_cast<EditConfigState*>(testMachine->GetState()) != nullptr)
     {
         loopedBackToEditState = true;
     }
@@ -72,7 +72,7 @@ test(StateMachineTests, RunMachine)
 
     // ConfigStateMachines should begin with the SelectState.
     bool correctInitialState = false;
-    if (dynamic_cast<SelectState*>(testMachine->state) != nullptr)
+    if (dynamic_cast<SelectState*>(testMachine->GetState()) != nullptr)
     {
         correctInitialState = true;
     }
@@ -88,7 +88,7 @@ test(StateMachineTests, RunMachine)
     // todo - for future readability, break these out into separate tests that leverage a test fixture and each configure the previous, expected state
     //https://github.com/bxparks/AUnit/tree/develop#test-fixtures
     bool enteredEditConfigState = false;
-    if (dynamic_cast<EditConfigState*>(testMachine->state) != nullptr)
+    if (dynamic_cast<EditConfigState*>(testMachine->GetState()) != nullptr)
     {
         enteredEditConfigState = true;
     }

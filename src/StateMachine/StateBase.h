@@ -6,11 +6,12 @@ class MachineBase;
 class StateBase
 {
     public:
-        virtual void ShortPress(MachineBase &machine) = 0;
-        virtual void LongPress(MachineBase &machine) = 0;
-
-    protected:
-        void setState(MachineBase &machine, StateBase *state);
+        virtual void Enter(MachineBase* machine) = 0;
+        
+        virtual void ShortPress(MachineBase* machine) = 0;
+        virtual void LongPress(MachineBase* machine) = 0;
+        
+        virtual void Exit(MachineBase* machine) = 0;
 };
 
 #endif
