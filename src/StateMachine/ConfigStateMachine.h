@@ -5,6 +5,7 @@
 #include "StateBase.h"
 #include "../Display/Display.h"
 #include "../Input/Input.h"
+#include "../StringResources.h"
 
 using namespace Display;
 using namespace Input;

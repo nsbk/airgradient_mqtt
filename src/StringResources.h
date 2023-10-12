@@ -3,6 +3,8 @@
 
 #include <WString.h>
 
+/* TODO - put in here the max character length for these strings */
+
 class OLEDStrings
 {
     public:
@@ -13,6 +15,25 @@ class OLEDStrings
         static inline const String EnteringConfigLine1 = "Entering";
         static inline const String EnteringConfigLine2 = "Config Menu";
         static inline const String EnteringConfigLine3 = "";
+
+        /* Configuration State Machine strings */
+        static inline const String SelectStateLine1 = "Press button";
+        static inline const String SelectStateLine2 = "to move";
+        static inline const String SelectStateLine3 = "forward";
+
+        static inline const String EditConfigStateLine1 = "Long press";
+        static inline const String EditConfigStateLine2 = "to update";
+        static inline const String EditConfigStateLine3 = "metrics dsp.";
+
+        static inline const String ClearConfigStateLine1 = "Long press";
+        static inline const String ClearConfigStateLine2 = "to wipe";
+        static inline const String ClearConfigStateLine3 = "saved config";
+
+        static inline const String RebootStateLine1 = "Long press";
+        static inline const String RebootStateLine2 = "to restart";
+        static inline const String RebootStateLine3 = "AirGradient";
+
+        
 
         static inline const String StartupMessageLine1 = "Warming up";
         static inline const String StartupMessageLine2 = "Serial Number:";

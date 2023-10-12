@@ -54,13 +54,13 @@ test(StateMachineTests, Constructor_and_Main_State_Transitions)
     }
     assertTrue(enteredRebootState);
 
-    bool loopedBackToInitialState = false;
+    bool loopedBackToEditState = false;
     testMachine->state->ShortPress(*testMachine);
-    if (dynamic_cast<SelectState*>(testMachine->state) != nullptr)
+    if (dynamic_cast<EditConfigState*>(testMachine->state) != nullptr)
     {
-        loopedBackToInitialState = true;
+        loopedBackToEditState = true;
     }
-    assertTrue(loopedBackToInitialState);
+    assertTrue(loopedBackToEditState);
 }
 
 test(StateMachineTests, RunMachine)
