@@ -3,7 +3,10 @@
 
 void MachineBase::SetState(StateBase& newState)
 {
-    state->Exit(this);
+    if (state != nullptr)
+    {
+        state->Exit(this);
+    }
     state = &newState;
     state->Enter(this);
 }

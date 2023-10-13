@@ -1,5 +1,4 @@
 #include "ConfigStateMachine.h"
-#include "Arduino.h"
 
 // Pin connected to AirGradient push button
 #define BUTTON_PIN D7
@@ -9,18 +8,12 @@ using namespace Input;
 
 ConfigStateMachine::ConfigStateMachine(IDisplay* display, IButton* button)
 {
-    Serial.println("configstatemachine constructor");
     this->display = display;
     this->button = button;
+    
     // This is the default/starting state
-    this->state = new SelectState();
-    // StateBase *newState = new SelectState();
-    // this->SetState(newState);
-
-    //StateBase newState = SelectState();
-    //this->SetState(*newState);
-
-    this->WriteToDisplay("test", "test", "test");
+    StateBase *newState = new SelectState();
+    this->SetState(*newState);
 }
 
 void ConfigStateMachine::Run()
