@@ -105,6 +105,7 @@ void RebootState::LongPress(MachineBase* machine)
     //ESP.restart();
 }
 
+#pragma region State_GetInstance_Functions
 
 StateBase& SelectState::GetInstance()
 {
@@ -130,22 +131,12 @@ StateBase& RebootState::GetInstance()
     return singleton;
 }
 
-// void SelectState::Enter(ConfigStateMachine* machine) 
-// {
-//     // Config-specific Enter logic
-//     machine->WriteToDisplay(
-//         OLEDStrings::SelectStateLine1,
-//         OLEDStrings::SelectStateLine2,
-//         OLEDStrings::SelectStateLine3
-//     );
+#pragma endregion State_GetInstance_Functions
 
-//     // Finish-out with any base-class logic.
-//     MachineBase* machineBase = machine;
-//     this->Enter(machineBase);
-// }
+#pragma region State_Enter_Functions
+
 void SelectState::Enter(MachineBase* machine) 
 {
-    // Finish-out with any base-class logic.
     ConfigStateMachine* configMachine = dynamic_cast<ConfigStateMachine*>(machine);
     
     configMachine->WriteToDisplay(
@@ -156,10 +147,44 @@ void SelectState::Enter(MachineBase* machine)
 }
 
 
-void EditConfigState::Enter(MachineBase* machine) {}
-void ClearState::Enter(MachineBase* machine) {}
-void RebootState::Enter(MachineBase* machine) {}
+void EditConfigState::Enter(MachineBase* machine) 
+{
+    ConfigStateMachine* configMachine = dynamic_cast<ConfigStateMachine*>(machine);
+    
+    configMachine->WriteToDisplay(
+        OLEDStrings::EditConfigStateLine1,
+        OLEDStrings::EditConfigStateLine2,
+        OLEDStrings::EditConfigStateLine3
+    );
+}
+
+void ClearState::Enter(MachineBase* machine) 
+{
+    ConfigStateMachine* configMachine = dynamic_cast<ConfigStateMachine*>(machine);
+    
+    configMachine->WriteToDisplay(
+        OLEDStrings::ClearConfigStateLine1,
+        OLEDStrings::ClearConfigStateLine2,
+        OLEDStrings::ClearConfigStateLine3
+    );
+}
+void RebootState::Enter(MachineBase* machine) 
+{
+    ConfigStateMachine* configMachine = dynamic_cast<ConfigStateMachine*>(machine);
+    
+    configMachine->WriteToDisplay(
+        OLEDStrings::RebootStateLine1,
+        OLEDStrings::RebootStateLine2,
+        OLEDStrings::RebootStateLine3
+    );
+}
+#pragma endregion State_Enter_Functions
+
+#pragma region State_Exit_Functions
+
 void SelectState::Exit(MachineBase* machine) {}
 void EditConfigState::Exit(MachineBase* machine) {}
 void ClearState::Exit(MachineBase* machine) {}
 void RebootState::Exit(MachineBase* machine) {}
+
+#pragma endregion State_Exit_Functions

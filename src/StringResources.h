@@ -17,9 +17,9 @@ class OLEDStrings
         static inline const String EnteringConfigLine3 = "";
 
         /* Configuration State Machine strings */
-        static inline const String SelectStateLine1 = "Press button";
-        static inline const String SelectStateLine2 = "to move";
-        static inline const String SelectStateLine3 = "forward";
+        static inline const String SelectStateLine1 = "Short press";
+        static inline const String SelectStateLine2 = "to cycle";
+        static inline const String SelectStateLine3 = "thru options";
 
         static inline const String EditConfigStateLine1 = "Long press";
         static inline const String EditConfigStateLine2 = "to update";

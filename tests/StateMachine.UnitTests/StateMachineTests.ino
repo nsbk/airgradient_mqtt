@@ -132,6 +132,38 @@ test(StateMachineTests, State_WriteToDisplay)
     assertEqual(OLEDStrings::SelectStateLine1, mockDisplay->Line1);
     assertEqual(OLEDStrings::SelectStateLine2, mockDisplay->Line2);
     assertEqual(OLEDStrings::SelectStateLine3, mockDisplay->Line3);
+
+    // Act - EditConfigState
+    testMachine->GetState()->ShortPress(testMachine);
+
+    // Assert
+    assertEqual(OLEDStrings::EditConfigStateLine1, mockDisplay->Line1);
+    assertEqual(OLEDStrings::EditConfigStateLine2, mockDisplay->Line2);
+    assertEqual(OLEDStrings::EditConfigStateLine3, mockDisplay->Line3);
+
+    // Act - ClearConfigState
+    testMachine->GetState()->ShortPress(testMachine);
+
+    // Assert
+    assertEqual(OLEDStrings::ClearConfigStateLine1, mockDisplay->Line1);
+    assertEqual(OLEDStrings::ClearConfigStateLine2, mockDisplay->Line2);
+    assertEqual(OLEDStrings::ClearConfigStateLine3, mockDisplay->Line3);
+
+    // Act - RebootState
+    testMachine->GetState()->ShortPress(testMachine);
+
+    // Assert
+    assertEqual(OLEDStrings::RebootStateLine1, mockDisplay->Line1);
+    assertEqual(OLEDStrings::RebootStateLine2, mockDisplay->Line2);
+    assertEqual(OLEDStrings::RebootStateLine3, mockDisplay->Line3);
+
+    // Act - EditConfigState
+    testMachine->GetState()->ShortPress(testMachine);
+
+    // Assert
+    assertEqual(OLEDStrings::EditConfigStateLine1, mockDisplay->Line1);
+    assertEqual(OLEDStrings::EditConfigStateLine2, mockDisplay->Line2);
+    assertEqual(OLEDStrings::EditConfigStateLine3, mockDisplay->Line3);
 }
 
 void setup()
@@ -142,7 +174,7 @@ void setup()
     SERIAL_PORT_MONITOR.begin(115200);
     while (!SERIAL_PORT_MONITOR); // needed for Leonardo/Micro
 
-    TestRunner::setVerbosity(Verbosity::kAll);
+    //TestRunner::setVerbosity(Verbosity::kAll);
 }
 
 void loop()
