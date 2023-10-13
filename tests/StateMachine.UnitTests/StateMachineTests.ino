@@ -99,6 +99,41 @@ test(StateMachineTests, RunMachine)
     assertFalse(mockButton->LongPressed);
 }
 
+test(StateMachineTests, Machine_WriteToDisplay)
+{
+    // Arrange
+    MockDisplay *mockDisplay = new MockDisplay();
+    IButton *mockButton = new MockButton();
+    ConfigStateMachine *testMachine = new ConfigStateMachine(mockDisplay, mockButton);
+
+    String testLine1 = "Hello";
+    String testLine2 = "Goodbye";
+    String testLine3 = "See you later";
+
+    // Act
+    testMachine->WriteToDisplay(testLine1, testLine2, testLine3);
+
+    // Assert
+    assertEqual(testLine1, mockDisplay->Line1);
+    assertEqual(testLine2, mockDisplay->Line2);
+    assertEqual(testLine3, mockDisplay->Line3);
+}
+
+test(StateMachineTests, State_WriteToDisplay)
+{
+    // Arrange
+    MockDisplay *mockDisplay = new MockDisplay();
+    IButton *mockButton = new MockButton();
+
+    // Act - ConfigStateMachine should begin with the SelectState.
+    MachineBase *testMachine = new ConfigStateMachine(mockDisplay, mockButton);
+
+    // Assert
+    assertEqual(OLEDStrings::SelectStateLine1, mockDisplay->Line1);
+    assertEqual(OLEDStrings::SelectStateLine2, mockDisplay->Line2);
+    assertEqual(OLEDStrings::SelectStateLine3, mockDisplay->Line3);
+}
+
 void setup()
 {
 #if ! defined(EPOXY_DUINO)

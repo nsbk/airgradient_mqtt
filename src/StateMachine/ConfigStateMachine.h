@@ -15,6 +15,7 @@ class ConfigStateMachine : public MachineBase
     public:
         ConfigStateMachine(IDisplay* display, IButton* button);
         void Run() override;
+        int WriteToDisplay(String line1, String line2, String line3);
 
     private:
         IDisplay* display;
@@ -26,6 +27,7 @@ class SelectState : public StateBase
 {
     public:
     // can this be a configstatemachine or does it have to be statemachine
+        //void Enter(ConfigStateMachine* machine);
         void Enter(MachineBase* machine) override;
         void ShortPress(MachineBase* machine) override;
         void LongPress(MachineBase* machine) override;

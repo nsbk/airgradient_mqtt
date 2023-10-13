@@ -1,4 +1,5 @@
 #include "ConfigStateMachine.h"
+#include "Arduino.h"
 
 // Pin connected to AirGradient push button
 #define BUTTON_PIN D7
@@ -8,11 +9,18 @@ using namespace Input;
 
 ConfigStateMachine::ConfigStateMachine(IDisplay* display, IButton* button)
 {
+    Serial.println("configstatemachine constructor");
     this->display = display;
     this->button = button;
     // This is the default/starting state
-    StateBase *newState = new SelectState();
-    this->state = newState;
+    this->state = new SelectState();
+    // StateBase *newState = new SelectState();
+    // this->SetState(newState);
+
+    //StateBase newState = SelectState();
+    //this->SetState(*newState);
+
+    this->WriteToDisplay("test", "test", "test");
 }
 
 void ConfigStateMachine::Run()
@@ -38,6 +46,11 @@ void ConfigStateMachine::Run()
 
 
     // 3. If a state transition occurs, take action based on the transition
+}
+
+int ConfigStateMachine::WriteToDisplay(String line1, String line2, String line3)
+{
+    return display->WriteLines(line1, line2, line3);
 }
 
 // SelectState short-press rotates to the EditConfigState
@@ -124,7 +137,32 @@ StateBase& RebootState::GetInstance()
     return singleton;
 }
 
-void SelectState::Enter(MachineBase* machine) {}
+// void SelectState::Enter(ConfigStateMachine* machine) 
+// {
+//     // Config-specific Enter logic
+//     machine->WriteToDisplay(
+//         OLEDStrings::SelectStateLine1,
+//         OLEDStrings::SelectStateLine2,
+//         OLEDStrings::SelectStateLine3
+//     );
+
+//     // Finish-out with any base-class logic.
+//     MachineBase* machineBase = machine;
+//     this->Enter(machineBase);
+// }
+void SelectState::Enter(MachineBase* machine) 
+{
+    // Finish-out with any base-class logic.
+    ConfigStateMachine* configMachine = dynamic_cast<ConfigStateMachine*>(machine);
+    
+    configMachine->WriteToDisplay(
+        OLEDStrings::SelectStateLine1,
+        OLEDStrings::SelectStateLine2,
+        OLEDStrings::SelectStateLine3
+    );
+}
+
+
 void EditConfigState::Enter(MachineBase* machine) {}
 void ClearState::Enter(MachineBase* machine) {}
 void RebootState::Enter(MachineBase* machine) {}

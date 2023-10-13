@@ -11,6 +11,9 @@ namespace Display
         public:
             // Update text on the display
             int WriteLines(String line1, String line2, String line3) override;
+            String Line1 = "";
+            String Line2 = "";
+            String Line3 = "";
     };
 }
 
