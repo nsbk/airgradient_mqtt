@@ -19,11 +19,13 @@ namespace Data::Local
     {
         private: 
             int addr = 4;
-            string filename = "/config.json";
+            String filename = "/config.json";
 
         public:
             int ReadDisplayConfigurationMode() override;
-            int WriteDisplayConfigurationMode(int mode) override;
+            bool WriteDisplayConfigurationMode(int mode) override;
+            std::map<String, String> ReadServerConfiguration() override;
+            int WriteServerConfiguration(std::map<String, String> configuration) override;
 
             // todo
             // take a key (like "mqtt_server") and a value (char array) to read and write data

@@ -33,3 +33,6 @@
 
 # Environment Files
 *.env
+
+# Root directory of EpoxyFS
+epoxyfsdata

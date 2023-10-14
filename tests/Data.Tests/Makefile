@@ -4,7 +4,7 @@
 include ../../.env
 
 APP_NAME := LocalStorageConfigTests
-ARDUINO_LIBS := AUnit EpoxyEepromEsp EpoxyFS Data Local
+ARDUINO_LIBS := AUnit EpoxyEepromEsp EpoxyFS ArduinoJson Data Local
 ARDUINO_LIB_DIRS := \
 	../../src \
 	../../src/Data

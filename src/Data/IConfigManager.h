@@ -2,6 +2,7 @@
 #define IConfigManager_h
 
 #include <WString.h>
+#include <map>
 
 namespace Data
 {
@@ -9,10 +10,10 @@ namespace Data
     class IConfigManager
     {
         public:
-            virtual int ReadDisplayConfigurationMode()=0;
-            virtual int WriteDisplayConfigurationMode(int mode)=0;
-
-            // read write json data... array of chararrays? map?
+            virtual int ReadDisplayConfigurationMode() = 0;
+            virtual bool WriteDisplayConfigurationMode(int mode) = 0;
+            virtual std::map<String, String> ReadServerConfiguration() = 0;
+            virtual int WriteServerConfiguration(std::map<String, String> configuration) = 0;
     };
 }
 
