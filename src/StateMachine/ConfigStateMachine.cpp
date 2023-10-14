@@ -1,12 +1,14 @@
 #include "ConfigStateMachine.h"
+#include "TypeConversionFunctions.h"
 
 // Pin connected to AirGradient push button
 #define BUTTON_PIN D7
 
 using namespace Display;
 using namespace Input;
+namespace TypeCast = StateMachineTypeConversionFunctions;
 
-ConfigStateMachine::ConfigStateMachine(IDisplay* display, IButton* button)
+ConfigStateMachine::ConfigStateMachine(IDisplay* display, IButton* button) : MachineBase(MachineType::CONFIG)
 {
     this->display = display;
     this->button = button;
@@ -137,46 +139,51 @@ StateBase& RebootState::GetInstance()
 
 void SelectState::Enter(MachineBase* machine) 
 {
-    ConfigStateMachine* configMachine = dynamic_cast<ConfigStateMachine*>(machine);
-    
-    configMachine->WriteToDisplay(
-        OLEDStrings::SelectStateLine1,
-        OLEDStrings::SelectStateLine2,
-        OLEDStrings::SelectStateLine3
-    );
+    // ConfigStateMachine* configMachine = dynamic_cast<ConfigStateMachine*>(machine);
+    if (ConfigStateMachine *configStateMachineInstance = TypeCast::machineCast<ConfigStateMachine *>(machine))
+    {
+        configStateMachineInstance->WriteToDisplay(
+            OLEDStrings::SelectStateLine1,
+            OLEDStrings::SelectStateLine2,
+            OLEDStrings::SelectStateLine3
+        );
+    }
 }
 
 
 void EditConfigState::Enter(MachineBase* machine) 
 {
-    ConfigStateMachine* configMachine = dynamic_cast<ConfigStateMachine*>(machine);
-    
-    configMachine->WriteToDisplay(
-        OLEDStrings::EditConfigStateLine1,
-        OLEDStrings::EditConfigStateLine2,
-        OLEDStrings::EditConfigStateLine3
-    );
+    if (ConfigStateMachine *configStateMachineInstance = TypeCast::machineCast<ConfigStateMachine *>(machine))
+    {
+        configStateMachineInstance->WriteToDisplay(
+            OLEDStrings::EditConfigStateLine1,
+            OLEDStrings::EditConfigStateLine2,
+            OLEDStrings::EditConfigStateLine3
+        );
+    }
 }
 
 void ClearState::Enter(MachineBase* machine) 
 {
-    ConfigStateMachine* configMachine = dynamic_cast<ConfigStateMachine*>(machine);
-    
-    configMachine->WriteToDisplay(
-        OLEDStrings::ClearConfigStateLine1,
-        OLEDStrings::ClearConfigStateLine2,
-        OLEDStrings::ClearConfigStateLine3
-    );
+    if (ConfigStateMachine *configStateMachineInstance = TypeCast::machineCast<ConfigStateMachine *>(machine))
+    {
+        configStateMachineInstance->WriteToDisplay(
+            OLEDStrings::ClearConfigStateLine1,
+            OLEDStrings::ClearConfigStateLine2,
+            OLEDStrings::ClearConfigStateLine3
+        );
+    }
 }
 void RebootState::Enter(MachineBase* machine) 
 {
-    ConfigStateMachine* configMachine = dynamic_cast<ConfigStateMachine*>(machine);
-    
-    configMachine->WriteToDisplay(
-        OLEDStrings::RebootStateLine1,
-        OLEDStrings::RebootStateLine2,
-        OLEDStrings::RebootStateLine3
-    );
+    if (ConfigStateMachine *configStateMachineInstance = TypeCast::machineCast<ConfigStateMachine *>(machine))
+    {
+        configStateMachineInstance->WriteToDisplay(
+            OLEDStrings::RebootStateLine1,
+            OLEDStrings::RebootStateLine2,
+            OLEDStrings::RebootStateLine3
+        );
+    }
 }
 #pragma endregion State_Enter_Functions
 
