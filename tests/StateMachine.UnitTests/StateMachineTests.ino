@@ -12,6 +12,8 @@ using aunit::Verbosity;
 // TODO namespace not implemented yet
 //using namespace StateMachine;
 
+#define RTTI_ENABLED 1
+
 test(StateMachineTests, Constructor_and_Main_State_Transitions)
 {
     IDisplay *mockDisplay = new MockDisplay();

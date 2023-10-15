@@ -1,5 +1,8 @@
 #include "ConfigStateMachine.h"
 #include "TypeConversionFunctions.h"
+#include "Arduino.h"
+
+#define RTTI_ENABLED 1
 
 // Pin connected to AirGradient push button
 #define BUTTON_PIN D7
@@ -139,51 +142,96 @@ StateBase& RebootState::GetInstance()
 
 void SelectState::Enter(MachineBase* machine) 
 {
-    // ConfigStateMachine* configMachine = dynamic_cast<ConfigStateMachine*>(machine);
-    if (ConfigStateMachine *configStateMachineInstance = TypeCast::machineCast<ConfigStateMachine *>(machine))
+#if defined(RTTI_ENABLED)
+    Serial.println("RTTI enabled");
+    if(ConfigStateMachine* configMachine = dynamic_cast<ConfigStateMachine*>(machine))
     {
-        configStateMachineInstance->WriteToDisplay(
+        configMachine->WriteToDisplay(
             OLEDStrings::SelectStateLine1,
             OLEDStrings::SelectStateLine2,
             OLEDStrings::SelectStateLine3
         );
     }
+#else
+    Serial.println("RTTI disabled");
+    if (ConfigStateMachine *configMachine = TypeCast::machineCast<ConfigStateMachine *>(machine))
+    {
+        configMachine->WriteToDisplay(
+            OLEDStrings::SelectStateLine1,
+            OLEDStrings::SelectStateLine2,
+            OLEDStrings::SelectStateLine3
+        );
+    }
+#endif    
 }
 
 
 void EditConfigState::Enter(MachineBase* machine) 
 {
-    if (ConfigStateMachine *configStateMachineInstance = TypeCast::machineCast<ConfigStateMachine *>(machine))
+#if RTTI_ENABLED
+    if (ConfigStateMachine* configMachine = dynamic_cast<ConfigStateMachine*>(machine))
     {
-        configStateMachineInstance->WriteToDisplay(
+        configMachine->WriteToDisplay(
             OLEDStrings::EditConfigStateLine1,
             OLEDStrings::EditConfigStateLine2,
             OLEDStrings::EditConfigStateLine3
         );
     }
+#else
+    if (ConfigStateMachine *configMachine = TypeCast::machineCast<ConfigStateMachine *>(machine))
+    {
+        configMachine->WriteToDisplay(
+            OLEDStrings::EditConfigStateLine1,
+            OLEDStrings::EditConfigStateLine2,
+            OLEDStrings::EditConfigStateLine3
+        );
+    }
+#endif    
 }
 
 void ClearState::Enter(MachineBase* machine) 
 {
-    if (ConfigStateMachine *configStateMachineInstance = TypeCast::machineCast<ConfigStateMachine *>(machine))
+#if RTTI_ENABLED
+    if (ConfigStateMachine* configMachine = dynamic_cast<ConfigStateMachine*>(machine))
     {
-        configStateMachineInstance->WriteToDisplay(
+        configMachine->WriteToDisplay(
             OLEDStrings::ClearConfigStateLine1,
             OLEDStrings::ClearConfigStateLine2,
             OLEDStrings::ClearConfigStateLine3
         );
     }
+#else
+    if (ConfigStateMachine *configMachine = TypeCast::machineCast<ConfigStateMachine *>(machine))
+    {
+        configMachine->WriteToDisplay(
+            OLEDStrings::ClearConfigStateLine1,
+            OLEDStrings::ClearConfigStateLine2,
+            OLEDStrings::ClearConfigStateLine3
+        );
+    }
+#endif    
 }
 void RebootState::Enter(MachineBase* machine) 
 {
-    if (ConfigStateMachine *configStateMachineInstance = TypeCast::machineCast<ConfigStateMachine *>(machine))
+#if RTTI_ENABLED
+    if (ConfigStateMachine* configMachine = dynamic_cast<ConfigStateMachine*>(machine))
     {
-        configStateMachineInstance->WriteToDisplay(
+        configMachine->WriteToDisplay(
             OLEDStrings::RebootStateLine1,
             OLEDStrings::RebootStateLine2,
             OLEDStrings::RebootStateLine3
         );
     }
+#else
+    if (ConfigStateMachine *configMachine = TypeCast::machineCast<ConfigStateMachine *>(machine))
+    {
+        configMachine->WriteToDisplay(
+            OLEDStrings::RebootStateLine1,
+            OLEDStrings::RebootStateLine2,
+            OLEDStrings::RebootStateLine3
+        );
+    }
+#endif    
 }
 #pragma endregion State_Enter_Functions
 
