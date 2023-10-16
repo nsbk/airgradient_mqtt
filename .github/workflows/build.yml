@@ -13,6 +13,6 @@ jobs:
         uses: actions/checkout@v1
 
       - name: Deploy docs
-        uses: elauber/airgradient_mqtt@main
+        uses: elauber/airgradient_mqtt@add-diy4_2-sensors-and-capabilities
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
