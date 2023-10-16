@@ -1,0 +1,37 @@
+#Project information
+site_name: AirGradient-Arduino-MQTT
+site_url: https://ericlauber.github.io/airgradient_mqtt/
+site_author: Eric Lauber
+site_description: >-
+  Arduino sketch for AirGradient DIY PRO V4.2 with added MQTT support, based around an ESP8266 Microcontroller.
+
+# Repository
+repo_name: EricLauber/airgradient_mqtt
+repo_url: https://github.com/EricLauber/airgradient_mqtt
+
+# Configuration
+theme:
+  name: material
+  highlightjs: true
+  hljs_languages:
+    - yaml
+  palette: 
+    # Palette toggle for light mode
+    - scheme: default
+      toggle:
+        icon: material/brightness-7 
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  
+  # Page Tree
+  nav:
+    - Home: index.md
+    - Main Section A:
+      - Intro Stuff: another.md
+    - Main Section B:
+      - More: subfolder/more.md

@@ -52,7 +52,6 @@ int ConfigStateMachine::WriteToDisplay(String line1, String line2, String line3)
 }
 
 // SelectState short-press rotates to the EditConfigState
-//void SelectState::ShortPress(MachineBase &machine)
 void SelectState::ShortPress(MachineBase* machine)
 {
     //setState(machine, new EditConfigState());
@@ -60,7 +59,6 @@ void SelectState::ShortPress(MachineBase* machine)
 }
 
 // SelectState long-press has the same action as the short-press
-//void SelectState::LongPress(MachineBase &machine)
 void SelectState::LongPress(MachineBase* machine)
 {
     //setState(machine, new EditConfigState());
@@ -68,21 +66,18 @@ void SelectState::LongPress(MachineBase* machine)
 }
 
 // SelectState short-press rotates to the ClearState
-//void EditConfigState::ShortPress(MachineBase &machine)
 void EditConfigState::ShortPress(MachineBase* machine)
 {
     //setState(machine, new ClearState());
     machine->SetState(ClearState::GetInstance());
 }
 
-//void EditConfigState::LongPress(MachineBase &machine)
 void EditConfigState::LongPress(MachineBase* machine)
 {
     
 }
 
 // SelectState short-press rotates to the RebootState
-//void ClearState::ShortPress(MachineBase &machine)
 void ClearState::ShortPress(MachineBase* machine)
 {
     //setState(machine, new RebootState());
@@ -96,7 +91,6 @@ void ClearState::LongPress(MachineBase* machine)
 }
 
 // SelectState short-press rotates back to the EditConfigState
-//void RebootState::ShortPress(MachineBase &machine)
 void RebootState::ShortPress(MachineBase* machine)
 {
     //setState(machine, new EditConfigState());
@@ -143,7 +137,7 @@ StateBase& RebootState::GetInstance()
 void SelectState::Enter(MachineBase* machine) 
 {
 #if defined(RTTI_ENABLED)
-    Serial.println("RTTI enabled");
+    //Serial.println("RTTI enabled");
     if(ConfigStateMachine* configMachine = dynamic_cast<ConfigStateMachine*>(machine))
     {
         configMachine->WriteToDisplay(
