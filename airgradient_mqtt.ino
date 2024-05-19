@@ -47,7 +47,7 @@ int counter = 0;
 
 WiFiClient espClient;
 PubSubClient client(espClient);
-AirGradient ag = AirGradient();
+static AirGradient ag = AirGradient(DIY_BASIC);
 unsigned long last_publish_time = 0;
 #define MSG_BUFFER_SIZE  (50)
 char msg[MSG_BUFFER_SIZE];
@@ -126,22 +126,23 @@ char* GenerateMetrics() {
 
   Serial.println("Reading PM2...");
   if (HAS_PM) {
-    int stat = ag.getPM2_Raw();
+    int stat = ag.pms5003.getPm25Ae();
     doc["pm02"] = stat;
   }
 
   Serial.println("Reading CO2...");
   if (HAS_CO2) {
-    int stat = ag.getCO2_Raw();
+    int stat = ag.s8.getCo2();
     doc["rco2"] = stat;
   }
 
   Serial.println("Reading HT...");
   if (HAS_SHT) {
-    TMP_RH stat = ag.periodicFetchData();
+    float temp = ag.sht.getTemperature();
+    int hum = ag.sht.getRelativeHumidity();
 
-    doc["atmp"] = stat.t - TEMP_DEVIATION;
-    doc["rhum"] = stat.rh - HUMIDITY_DEVIATION;
+    doc["atmp"] = temp - TEMP_DEVIATION;
+    doc["rhum"] = hum - HUMIDITY_DEVIATION;
   }
 
   serializeJson(doc, output, sizeof(output));
@@ -154,13 +155,15 @@ char* GenerateMetrics() {
 
 void setup() {
   pinMode(D2, OUTPUT);     // Initialize the BUILTIN_LED pin as an output
+  Wire.begin(ag.getI2cSdaPin(), ag.getI2cSclPin());
+  delay(1000);
   Serial.begin(9600);
   setup_wifi();
   client.setServer(MQTT_SERVER, 1883);
   // Enable active sensors.
-  if (HAS_PM) ag.PMS_Init();
-  if (HAS_CO2) ag.CO2_Init();
-  if (HAS_SHT) ag.TMP_RH_Init(0x44);
+  if (HAS_PM) ag.pms5003.begin(&Serial);
+  if (HAS_CO2) ag.s8.begin(&Serial);
+  if (HAS_SHT) ag.sht.begin(Wire);
 }
 
 void loop() {
