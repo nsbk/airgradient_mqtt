@@ -1,5 +1,10 @@
 # AirGradient MQTT
 
+> [!WARNING]  
+> This project is not maintained anymore.
+>
+> As of today I have moved all my airgradient DIY sensors to run https://github.com/MallocArray/airgradient_esphome
+
 Simple script that reads AirGradient air quality sensors and publishes data to an MQTT server.
 
 I use it along with my DIY AirGradient boards. Information on how to get the components and build the boards is available [here](https://www.airgradient.com/open-airgradient/instructions/diy/) 
